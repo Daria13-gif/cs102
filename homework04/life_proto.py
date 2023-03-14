@@ -11,8 +11,7 @@ Grid = tp.List[Cells]
 
 
 class GameOfLife:
-    def __init__(self, width: int = 640, height: int = 480,
-                 cell_size: int = 10, speed: int = 10) -> None:
+    def __init__(self, width: int = 640, height: int = 480, cell_size: int = 10, speed: int = 10) -> None:
         self.width = width
         self.height = height
         self.cell_size = cell_size
@@ -90,8 +89,7 @@ class GameOfLife:
         """
         if randomize:  # если значение записываем рандомно, то возвращаем
             # список со значениями в каждой ячейке 0 или 1
-            return \
-                [[randint(0, 1) for _ in range(self.cell_width)] for __ in range(self.cell_height)]
+            return [[randint(0, 1) for _ in range(self.cell_width)] for __ in range(self.cell_height)]
         else:  # если не рандомно, то возвращаем список из нулей
             return [[0 for _ in range(self.cell_width)] for __ in range(self.cell_height)]
 
@@ -102,8 +100,7 @@ class GameOfLife:
         for x in range(self.cell_width):  # проходим по всему полю
             for y in range(self.cell_height):
                 # определяем позицию клетки (начиная с верхней левой клетки поля)
-                rect = pygame.Rect(x * self.cell_size,
-                                   y * self.cell_size, self.cell_size, self.cell_size)
+                rect = pygame.Rect(x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size)
                 # если данное значение в поле равно 1,
                 # то красим в зеденый, а если 0, то красим в белый
                 if self.grid[y][x]:
