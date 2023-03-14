@@ -39,7 +39,7 @@ class Console(UI):
         screen = curses.initscr()
         while (
             not self.life.is_max_generations_exceeded and self.life.is_changing
-        ): # пока не достигнем заданного кол-ва шагов
+        ):  # пока не достигнем заданного кол-ва шагов
             # либо изменился экран
             self.draw_borders(screen)  # рисуем гарницы
             self.draw_grid(screen)  # рисуем поле
