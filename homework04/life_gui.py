@@ -67,34 +67,21 @@ class GUI(UI):
         running = True
         start = False  # игра началась
         can_add = True  # можно ли еще закрашивать на поле клетки
-        while (
-            running
-            and not self.life.is_max_generations_exceeded
-            and self.life.is_changing
-        ):
+        while running and not self.life.is_max_generations_exceeded and self.life.is_changing:
             for event in pygame.event.get():  # получаем события с клавиатуры или мышки
 
                 if event.type == pygame.QUIT:  # если игру закрыли, то выходим из цикла
                     running = False
-                if (
-                    event.type == pygame.MOUSEBUTTONDOWN
-                ):  # проверяем была ли нажата кнопка мыши
+                if event.type == pygame.MOUSEBUTTONDOWN:  # проверяем была ли нажата кнопка мыши
                     if can_add:  # проверяем можно ли добавлять
                         x, y = event.pos  # считываем координаты нажатой мышки
-                        self.life.curr_generation[y // self.cell_size][
-                            x // self.cell_size
-                        ] = (
-                            self.life.curr_generation[y // self.cell_size][
-                                x // self.cell_size
-                            ]
-                            + 1
+                        self.life.curr_generation[y // self.cell_size][x // self.cell_size] = (
+                            self.life.curr_generation[y // self.cell_size][x // self.cell_size] + 1
                         ) % 2  # в текущем
                         # состоянии меняем значение нажатой клетки (клетка либо белая, либо зеленая)
                 if event.type == 769:  # код пробела
                     start = not start  # меняем состояние игры (пауза/плей)
-                    can_add = (
-                        False  # как только запускаем игру, менять клетки уже нельзя
-                    )
+                    can_add = False  # как только запускаем игру, менять клетки уже нельзя
 
             if start:  # если игра запущена, то делаем след. шаг
                 self.life.step()
