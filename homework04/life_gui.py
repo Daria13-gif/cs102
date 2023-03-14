@@ -69,7 +69,6 @@ class GUI(UI):
         can_add = True  # можно ли еще закрашивать на поле клетки
         while running and not self.life.is_max_generations_exceeded and self.life.is_changing:
             for event in pygame.event.get():  # получаем события с клавиатуры или мышки
-
                 if event.type == pygame.QUIT:  # если игру закрыли, то выходим из цикла
                     running = False
                 if event.type == pygame.MOUSEBUTTONDOWN:  # проверяем была ли нажата кнопка мыши
