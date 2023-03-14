@@ -49,7 +49,7 @@ class GameOfLife:
         self.screen.fill(pygame.Color("white"))
 
         # Создание списка клеток
-        self.grid = self.create_grid(randomize=True)
+        self.grid = self.create_grid(randomize=True)    # type: ignore
 
         running = True
         while running:
@@ -59,7 +59,7 @@ class GameOfLife:
 
             self.draw_grid()
             self.draw_lines()
-            self.grid = copy.deepcopy(self.get_next_generation())
+            self.grid = copy.deepcopy(self.get_next_generation())   # type: ignore
 
             # Отрисовка списка клеток
             # Выполнение одного шага игры (обновление состояния ячеек)
@@ -103,7 +103,7 @@ class GameOfLife:
                 rect = pygame.Rect(x * self.cell_size, y * self.cell_size, self.cell_size, self.cell_size)
                 # если данное значение в поле равно 1,
                 # то красим в зеденый, а если 0, то красим в белый
-                if self.grid[y][x]:
+                if self.grid[y][x]:    # type: ignore
                     pygame.draw.rect(self.screen, pygame.Color("green"), rect)
                 else:
                     pygame.draw.rect(self.screen, pygame.Color("white"), rect)
@@ -166,7 +166,7 @@ class GameOfLife:
                 # обходим соседий и  смотрим является ли сосед живым
                 for cell in list_cells:
                     # если живой то увеличиваем к на 1
-                    if self.grid[cell // self.cell_width][cell % self.cell_width] == 1:
+                    if self.grid[cell // self.cell_width][cell % self.cell_width] == 1:    # type: ignore
                         k += 1
                 # если соседей 2 или 3, то клетка выживает
                 if k == 2 or k == 3:
