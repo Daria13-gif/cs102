@@ -97,6 +97,8 @@ class GameOfLife:
         """
         Отрисовка списка клеток с закрашиванием их в соответствующе цвета.
         """
+        if self.grid is None:
+            return
         for x in range(self.cell_width):  # проходим по всему полю
             for y in range(self.cell_height):
                 # определяем позицию клетки (начиная с верхней левой клетки поля)
@@ -109,8 +111,11 @@ class GameOfLife:
                     pygame.draw.rect(self.screen, pygame.Color("white"), rect)
 
     def get_neighbours(self, cell: Cell) -> Cells:
+
         # находим все соседние клетки + проверяем не ушли ли мы за границы поля
         list_neighbours = []
+        if self.grid is None:
+            return list_neighbours
         if cell[0] - 1 >= 0 and cell[1] - 1 >= 0:
             list_neighbours.append(self.grid[cell[0] - 1][cell[1] - 1])
         if cell[0] - 1 >= 0:
@@ -139,7 +144,10 @@ class GameOfLife:
             Новое поколение клеток.
         """
         # создаем новое поле из 0
+
         new_grid = [[0 for _ in range(self.cell_width)] for __ in range(self.cell_height)]
+        if self.grid is None:
+            return new_grid
         # обходим все клетки поля
         for i in range(self.cell_height):
             for j in range(self.cell_width):
