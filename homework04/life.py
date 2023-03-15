@@ -19,7 +19,7 @@ class GameOfLife:
         max_generations: tp.Optional[float] = float("inf"),
     ) -> None:
         # Размер клеточного поля
-        self.rows, self.cols = size[1], size[0]
+        self.rows, self.cols = size[0], size[1]
 
         # Вычисляем количество ячеек по вертикали и горизонтали
         self.cell_width = self.cols
@@ -44,21 +44,21 @@ class GameOfLife:
         # находим все соседние клетки + проверяем не ушли ли мы за границы поля
         list_neighbours = []
         if cell[0] - 1 >= 0 and cell[1] - 1 >= 0:
-            list_neighbours.append(self.cell_width * (cell[0] - 1) + cell[1] - 1)
+            list_neighbours.append(self.curr_generation[cell[0] - 1][cell[1] - 1])
         if cell[0] - 1 >= 0:
-            list_neighbours.append(self.cell_width * (cell[0] - 1) + cell[1])
+            list_neighbours.append(self.curr_generation[cell[0] - 1][cell[1]])
         if cell[0] - 1 >= 0 and cell[1] + 1 < self.cell_width:
-            list_neighbours.append(self.cell_width * (cell[0] - 1) + cell[1] + 1)
+            list_neighbours.append(self.curr_generation[cell[0] - 1][cell[1] + 1])
         if cell[1] + 1 < self.cell_width:
-            list_neighbours.append(self.cell_width * (cell[0]) + cell[1] + 1)
+            list_neighbours.append(self.curr_generation[cell[0]][cell[1] + 1])
         if cell[1] - 1 >= 0:
-            list_neighbours.append(self.cell_width * (cell[0]) + cell[1] - 1)
+            list_neighbours.append(self.curr_generation[cell[0]][cell[1] - 1])
         if cell[0] + 1 < self.cell_height and cell[1] - 1 >= 0:
-            list_neighbours.append(self.cell_width * (cell[0] + 1) + cell[1] - 1)
+            list_neighbours.append(self.curr_generation[cell[0] + 1][cell[1] - 1])
         if cell[0] + 1 < self.cell_height and cell[1] + 1 < self.cell_width:
-            list_neighbours.append(self.cell_width * (cell[0] + 1) + cell[1] + 1)
+            list_neighbours.append(self.curr_generation[cell[0] + 1][cell[1] + 1])
         if cell[0] + 1 < self.cell_height:
-            list_neighbours.append(self.cell_width * (cell[0] + 1) + cell[1])
+            list_neighbours.append(self.curr_generation[cell[0] + 1][cell[1]])
         return list_neighbours
 
     def get_next_generation(self) -> Grid:
@@ -69,12 +69,7 @@ class GameOfLife:
             for j in range(self.cell_width):
                 # получаем соседей заданной клетки
                 list_cells = self.get_neighbours((i, j))
-                k = 0
-                # обходим соседий и  смотрим является ли сосед живым
-                for cell in list_cells:
-                    # если живой то увеличиваем к на 1
-                    if self.curr_generation[cell // self.cell_width][cell % self.cell_width] == 1:
-                        k += 1
+                k = sum(list_cells)
                 # если соседей 2 и существо живое или 3, то клетка выживает
                 if k == 2 and self.curr_generation[i][j] == 1 or k == 3:
                     new_grid[i][j] = 1
@@ -96,7 +91,7 @@ class GameOfLife:
         """
         if self.max_generations is None:
             return False
-        if self.generations > self.max_generations:
+        if self.generations >= self.max_generations:
             return True
         else:
             return False
