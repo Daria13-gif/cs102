@@ -88,6 +88,7 @@ class GameOfLife:
                 if (k == 2 and self.curr_generation[i][j] == 1) or k == 3:
                     new_grid[i][j] = 1
         return new_grid
+    # print
 
     def step(self) -> None:
         """
