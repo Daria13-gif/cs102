@@ -114,7 +114,7 @@ class GameOfLife:
         # находим все соседние клетки + проверяем не ушли ли мы за границы поля
         list_neighbours = []
         if self.grid is None:
-            return list_neighbours
+            return [0]
         if cell[0] - 1 >= 0 and cell[1] - 1 >= 0:
             list_neighbours.append(self.grid[cell[0] - 1][cell[1] - 1])
         if cell[0] - 1 >= 0:
