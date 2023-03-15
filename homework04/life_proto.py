@@ -111,7 +111,6 @@ class GameOfLife:
                     pygame.draw.rect(self.screen, pygame.Color("white"), rect)
 
     def get_neighbours(self, cell: Cell) -> Cells:
-
         # находим все соседние клетки + проверяем не ушли ли мы за границы поля
         list_neighbours = []
         if self.grid is None:
