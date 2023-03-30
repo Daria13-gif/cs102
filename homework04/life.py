@@ -133,4 +133,3 @@ class GameOfLife:
             for i in self.curr_generation:
                 # берем каждую строчку их нынешнего поколения и записываем ее в файл
                 f.write("".join(map(str, i)) + "\n")
-
