@@ -90,7 +90,7 @@ class GameOfLife:
         if randomize:  # если значение записываем рандомно, то возвращаем
             # список со значениями в каждой ячейке 0 или 1
             return [[randint(0, 1) for _ in range(self.cell_width)] for __ in range(self.cell_height)]
-          # если не рандомно, то возвращаем список из нулей
+        # если не рандомно, то возвращаем список из нулей
         return [[0 for _ in range(self.cell_width)] for __ in range(self.cell_height)]
 
     def draw_grid(self) -> None:

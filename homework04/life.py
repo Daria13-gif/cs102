@@ -35,9 +35,8 @@ class GameOfLife:
         if randomize:
             # если значение записываем рандомно,
             # то возвращаем список со значениями в каждой ячейке 0 или 1
-            return [[randint(0, 1) for _ in range(self.cell_width)]
-                    for __ in range(self.cell_height)]
-          # если не рандомно, то возвращаем список из нулей
+            return [[randint(0, 1) for _ in range(self.cell_width)] for __ in range(self.cell_height)]
+        # если не рандомно, то возвращаем список из нулей
         return [[0 for _ in range(self.cell_width)] for __ in range(self.cell_height)]
 
     def get_neighbours(self, cell: Cell) -> Cells:
@@ -83,8 +82,7 @@ class GameOfLife:
         self.generations += 1
         # в предыдущее поколение записываем нынешнее поколение,
         # а в нынешнее поколение след. поколение
-        self.prev_generation, self.curr_generation = \
-            copy.deepcopy(self.curr_generation), self.get_next_generation()
+        self.prev_generation, self.curr_generation = copy.deepcopy(self.curr_generation), self.get_next_generation()
 
     @property
     def is_max_generations_exceeded(self) -> bool:
@@ -119,8 +117,7 @@ class GameOfLife:
                     # элементы, превращая их в числа
                     a.append(int(j))
                 curr_generation.append(a)
-            s = GameOfLife((len(curr_generation),
-                            len(curr_generation[0])))
+            s = GameOfLife((len(curr_generation), len(curr_generation[0])))
             # создаем объект класса с кол-вом строк и
             # кол-вом столбцов
             s.curr_generation = copy.deepcopy(curr_generation)
