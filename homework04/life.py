@@ -3,8 +3,6 @@ import pathlib
 import typing as tp
 from random import randint
 
-import pygame
-from pygame.locals import *
 
 Cell = tp.Tuple[int, int]
 Cells = tp.List[int]
@@ -35,10 +33,13 @@ class GameOfLife:
         self.generations = 1
 
     def create_grid(self, randomize: bool = False) -> Grid:
-        if randomize:  # если значение записываем рандомно, то возвращаем список со значениями в каждой ячейке 0 или 1
-            return [[randint(0, 1) for _ in range(self.cell_width)] for __ in range(self.cell_height)]
-        else:  # если не рандомно, то возвращаем список из нулей
-            return [[0 for _ in range(self.cell_width)] for __ in range(self.cell_height)]
+        if randomize:
+            # если значение записываем рандомно,
+            # то возвращаем список со значениями в каждой ячейке 0 или 1
+            return [[randint(0, 1) for _ in range(self.cell_width)]
+                    for __ in range(self.cell_height)]
+          # если не рандомно, то возвращаем список из нулей
+        return [[0 for _ in range(self.cell_width)] for __ in range(self.cell_height)]
 
     def get_neighbours(self, cell: Cell) -> Cells:
         # находим все соседние клетки + проверяем не ушли ли мы за границы поля
@@ -81,20 +82,20 @@ class GameOfLife:
         """
         # количество поколений увеличиваем на 1
         self.generations += 1
-        # в предыдущее поколение записываем нынешнее поколение, а в нынешнее поколение след. поколение
-        self.prev_generation, self.curr_generation = copy.deepcopy(self.curr_generation), self.get_next_generation()
+        # в предыдущее поколение записываем нынешнее поколение,
+        # а в нынешнее поколение след. поколение
+        self.prev_generation, self.curr_generation = \
+            copy.deepcopy(self.curr_generation), self.get_next_generation()
 
     @property
     def is_max_generations_exceeded(self) -> bool:
         """
         Не превысило ли текущее число поколений максимально допустимое.
         """
-        if self.max_generations is None:
-            return False
         if self.generations >= self.max_generations:
             return True
-        else:
-            return False
+
+        return False
 
     @property
     def is_changing(self) -> bool:
@@ -103,35 +104,37 @@ class GameOfLife:
         """
         if self.curr_generation == self.prev_generation:
             return False
-        else:
-            return True
+        return True
 
     @staticmethod
     def from_file(filename: pathlib.Path) -> "GameOfLife":
         """
         Прочитать состояние клеток из указанного файла.
         """
-        file = open(filename)
-        f = file.read().split("\n")
-        file.close()
-        curr_generation = []
-        for i in f:
-            a = []
-            for j in i:  # идем посторочно и разбиваем нашу строчку на
-                # элементы, превращая их в числа
-                a.append(int(j))
-            curr_generation.append(a)
-        s = GameOfLife((len(curr_generation), len(curr_generation[0])))  # создаем объект класса с кол-вом строк и
-        # кол-вом столбцов
-        s.curr_generation = copy.deepcopy(curr_generation)  # занчение из файла присваем в переменную curr_generation
-        # объекту данного класса
-        return s  # возвращаем этот объект
+        with open(filename, encoding="utf-8") as file:
+            f = file.read().split("\n")
+            curr_generation = []
+            for i in f:
+                a = []
+                for j in i:  # идем посторочно и разбиваем нашу строчку на
+                    # элементы, превращая их в числа
+                    a.append(int(j))
+                curr_generation.append(a)
+            s = GameOfLife((len(curr_generation),
+                            len(curr_generation[0])))
+            # создаем объект класса с кол-вом строк и
+            # кол-вом столбцов
+            s.curr_generation = copy.deepcopy(curr_generation)
+            # занчение из файла присваем в переменную curr_generation
+            # объекту данного класса
+            return s  # возвращаем этот объект
 
     def save(self, filename: pathlib.Path) -> None:
         """
         Сохранить текущее состояние клеток в указанный файл.
         """
-        f = open(filename, "w")
-        for i in self.curr_generation:  # берем каждую строчку их нынешнего поколения и записываем ее в файл
-            f.write("".join(map(str, i)) + "\n")
-        f.close()
+        with open(filename, "w") as f:
+            for i in self.curr_generation:
+                # берем каждую строчку их нынешнего поколения и записываем ее в файл
+                f.write("".join(map(str, i)) + "\n")
+

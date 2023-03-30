@@ -90,8 +90,8 @@ class GameOfLife:
         if randomize:  # если значение записываем рандомно, то возвращаем
             # список со значениями в каждой ячейке 0 или 1
             return [[randint(0, 1) for _ in range(self.cell_width)] for __ in range(self.cell_height)]
-        else:  # если не рандомно, то возвращаем список из нулей
-            return [[0 for _ in range(self.cell_width)] for __ in range(self.cell_height)]
+          # если не рандомно, то возвращаем список из нулей
+        return [[0 for _ in range(self.cell_width)] for __ in range(self.cell_height)]
 
     def draw_grid(self) -> None:
         """
@@ -115,7 +115,7 @@ class GameOfLife:
 
         if self.grid is None:
             return [0]
-        list_neighbours = list()
+        list_neighbours = []
         if cell[0] - 1 >= 0 and cell[1] - 1 >= 0:
             list_neighbours.append(self.grid[cell[0] - 1][cell[1] - 1])
         if cell[0] - 1 >= 0:
