@@ -89,12 +89,9 @@ class GameOfLife:
         """
         Не превысило ли текущее число поколений максимально допустимое.
         """
-        if self.generations is not None:
-            if isinstance(self.generations, (int, float)):
-                if int(self.generations) >= self.max_generations:
-                    return True
-            else:
-                return False
+        if int(self.generations) >= self.max_generations and self.generations is not None:  # type: ignore
+            return True
+        return False
 
     @property
     def is_changing(self) -> bool:
