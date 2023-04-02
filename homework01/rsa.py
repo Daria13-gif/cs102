@@ -12,8 +12,12 @@ def is_prime(n: int) -> bool:
     >>> is_prime(8)
     False
     """
-    # PUT YOUR CODE HERE
-    pass
+    if n <= 0:
+        return False
+    for i in range(2, int(n**0.5) + 1):
+        if n % i == 0:
+            return False
+    return True
 
 
 def gcd(a: int, b: int) -> int:
@@ -24,8 +28,14 @@ def gcd(a: int, b: int) -> int:
     >>> gcd(3, 7)
     1
     """
-    # PUT YOUR CODE HERE
-    pass
+    if b == 0:
+        return a
+    if a == 0:
+        return b
+    while True:
+        if a % b == 0:  # если а делится без остатка на b, то b - НОД
+            return b
+        a, b = b, a % b  # если b не НОД, то будем делить b на остаток от деления а на b
 
 
 def multiplicative_inverse(e: int, phi: int) -> int:
@@ -35,8 +45,23 @@ def multiplicative_inverse(e: int, phi: int) -> int:
     >>> multiplicative_inverse(7, 40)
     23
     """
-    # PUT YOUR CODE HERE
-    pass
+    if e == 0:
+        return 0
+    x = 0
+    y = 1
+    n = phi
+    i = 0
+    while True:
+        i += 1
+        q = phi // e  # находим целую часть от деления
+        r = phi % e  # находим остаток от деления
+        if r == 0:
+            if i % 2 == 1:  # на каждом нечетном шаге получаем прямое обратное(знак)
+                return y
+            else:  # на каждом четном получаем противоположное обратное
+                return n - y
+        x, y = y, q * y + x
+        e, phi = r, e
 
 
 def generate_keypair(p: int, q: int) -> tp.Tuple[tp.Tuple[int, int], tp.Tuple[int, int]]:
@@ -46,10 +71,10 @@ def generate_keypair(p: int, q: int) -> tp.Tuple[tp.Tuple[int, int], tp.Tuple[in
         raise ValueError("p and q cannot be equal")
 
     # n = pq
-    # PUT YOUR CODE HERE
+    n = p * q
 
     # phi = (p-1)(q-1)
-    # PUT YOUR CODE HERE
+    phi = (p - 1) * (q - 1)
 
     # Choose an integer e such that e and phi(n) are coprime
     e = random.randrange(1, phi)
@@ -82,7 +107,7 @@ def decrypt(pk: tp.Tuple[int, int], ciphertext: tp.List[int]) -> str:
     # Unpack the key into its components
     key, n = pk
     # Generate the plaintext based on the ciphertext and key using a^b mod m
-    plain = [chr((char ** key) % n) for char in ciphertext]
+    plain = [chr((char**key) % n) for char in ciphertext]
     # Return the array of bytes as a string
     return "".join(plain)
 
