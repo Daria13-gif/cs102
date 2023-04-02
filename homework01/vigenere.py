@@ -9,7 +9,18 @@ def encrypt_vigenere(plaintext: str, keyword: str) -> str:
     'LXFOPVEFRNHR'
     """
     ciphertext = ""
-    # PUT YOUR CODE HERE
+    for i in range(len(plaintext)):  # обход каждой буквы в plaintext
+        if "a" <= plaintext[i] <= "z":  # проверка наличия буквы в алфавите
+            # находим сдвиг для каждой буквы относительно индексов обоих слов
+            ciphertext += chr(
+                (ord(plaintext[i]) + ord(keyword.lower()[i % len(keyword)]) - 2 * ord("a")) % 26 + ord("a")
+            )
+        elif "A" <= plaintext[i] <= "Z":  # проверка наличия буквы в заглавном алфавите
+            ciphertext += chr(
+                (ord(plaintext[i]) + ord(keyword.upper()[i % len(keyword)]) - 2 * ord("A")) % 26 + ord("A")
+            )
+        else:
+            ciphertext += plaintext[i]
     return ciphertext
 
 
@@ -24,5 +35,12 @@ def decrypt_vigenere(ciphertext: str, keyword: str) -> str:
     'ATTACKATDAWN'
     """
     plaintext = ""
-    # PUT YOUR CODE HERE
+    for i in range(len(ciphertext)):  # обход каждой буквы в ciphertext
+        if "a" <= ciphertext[i] <= "z":  # проверка наличия буквы в алфавите
+            # находим сдвиг для каждой буквы относительно индексов обоих слов
+            plaintext += chr((ord(ciphertext[i]) - ord(keyword.lower()[i % len(keyword)])) % 26 + ord("a"))
+        elif "A" <= ciphertext[i] <= "Z":  # проверка наличия буквы в заглавном алфавите
+            plaintext += chr((ord(ciphertext[i]) - ord(keyword.upper()[i % len(keyword)])) % 26 + ord("A"))
+        else:
+            plaintext += ciphertext[i]
     return plaintext

@@ -11,7 +11,14 @@ def encrypt_caesar(plaintext: str, shift: int = 3) -> str:
     ''
     """
     ciphertext = ""
-    # PUT YOUR CODE HERE
+    for i in plaintext:  # обход каждой буквы в plaintext
+        if "a" <= i <= "z":  # проверка наличия буквы в алфавите
+            # находи букву: для этого нахом сдвиг и прибавляем "а" в пределах алфавита
+            ciphertext += chr((ord(i) + shift - ord("a")) % 26 + ord("a"))
+        elif "A" <= i <= "Z":  # проверка наличия буквы в заглавном алфавите
+            ciphertext += chr((ord(i) + shift - ord("A")) % 26 + ord("A"))
+        else:
+            ciphertext += i
     return ciphertext
 
 
@@ -28,5 +35,6 @@ def decrypt_caesar(ciphertext: str, shift: int = 3) -> str:
     ''
     """
     plaintext = ""
-    # PUT YOUR CODE HERE
+    # расшифрование это то же самое, что и шифрование, только с отрицательным знаком
+    plaintext = encrypt_caesar(ciphertext, -shift)
     return plaintext
