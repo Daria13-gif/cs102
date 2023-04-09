@@ -1,12 +1,11 @@
-import telebot
-import gspread
 import json
-import pandas as pd
-import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from time import sleep
-import validators
 
+import gspread
+import pandas as pd
+import telebot
+import validators
 
 bot = telebot.TeleBot("6055195312:AAHUl2VodKXqqT6YxNmd-E16Fg79wxphXLo")
 # создаем две переменные ROW и COL и присваиваем им значения 0. В этом случае,
@@ -55,7 +54,9 @@ def convert_date(date: str = "01/01/00", divider: str = "/"):
     # Функция начинается с разделения строки "date" на отдельные составляющие
     # (день, месяц, год) с помощью метода split()
     ddmmyyyy = date.split(divider)
-    return datetime(day=int(ddmmyyyy[0]), month=int(ddmmyyyy[1]), year=2000 + int(ddmmyyyy[2]))
+    return datetime(
+        day=int(ddmmyyyy[0]), month=int(ddmmyyyy[1]), year=2000 + int(ddmmyyyy[2])
+    )
 
 
 def connect_table(message):
@@ -104,7 +105,9 @@ def choose_action(message):
         bot.register_next_step_handler(msg, connect_table)
 
     elif message.text == "Редактировать предметы":
-        markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=True
+        )
         markup.row("Добавить новый предмет")
         markup.row("Изменить информацию о предмете")
         markup.row("Удалить предмет")
@@ -113,7 +116,9 @@ def choose_action(message):
         bot.register_next_step_handler(info, choose_subject_action)
 
     elif message.text == "Редактировать дедлайн":
-        markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=True
+        )
         markup.row("Добавить новый дедлайн")
         markup.row("Редактировать дедлайн")
         bot.send_message(message.chat.id, "Выбери действие", reply_markup=markup)
@@ -155,7 +160,9 @@ def choose_action(message):
                             parse_mode="HTML",
                         )
         if deadline_count == 0:
-            bot.send_message(message.chat.id, "Дедлайнов на ближайшей неделе нет. Гуляем!")
+            bot.send_message(
+                message.chat.id, "Дедлайнов на ближайшей неделе нет. Гуляем!"
+            )
         sleep(deadline_count)
         start(message)
 
@@ -163,11 +170,15 @@ def choose_action(message):
 def choose_subject_action(message):
     """Выбираем действие в разделе Редактировать предметы"""
     if message.text == "Добавить новый предмет":
-        info = bot.send_message(message.chat.id, "Введи название предмета, который хочешь добавить")
+        info = bot.send_message(
+            message.chat.id, "Введи название предмета, который хочешь добавить"
+        )
         bot.register_next_step_handler(info, add_new_subject)
 
     elif message.text == "Изменить информацию о предмете":
-        markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=True
+        )
         markup.row("Изменить название предмета")
         markup.row("Изменить ссылку на таблицу с баллами по предмету")
         info = bot.send_message(message.chat.id, "Выбери действие", reply_markup=markup)
@@ -177,10 +188,14 @@ def choose_subject_action(message):
         choose_subject(message)
 
     elif message.text == "Удалить все предметы":
-        markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+        markup = telebot.types.ReplyKeyboardMarkup(
+            resize_keyboard=True, one_time_keyboard=True
+        )
         markup.row("Да, гори оно всё огнём")
         markup.row("Нет, ещё пригодится")
-        info = bot.send_message(message.chat.id, "Точно удалить всё?", reply_markup=markup)
+        info = bot.send_message(
+            message.chat.id, "Точно удалить всё?", reply_markup=markup
+        )
         bot.register_next_step_handler(info, choose_removal_option)
 
 
@@ -219,7 +234,9 @@ def choose_subject(message):
     # создается объект разметки клавиатуры "markup" с помощью класса
     # "telebot.types.ReplyKeyboardMarkup". Это позволяет создать кнопки,
     # которые пользователь может нажимать, чтобы выбрать определенный вариант
-    markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    markup = telebot.types.ReplyKeyboardMarkup(
+        resize_keyboard=True, one_time_keyboard=True
+    )
     # с помощью функции "access_current_sheet", получаем текущую таблицу данных, извлекаем
     # из нее данные в формате pandas dataframe и итерируемся по ним, добавляя каждый предмет
     # в разметку клавиатуры
@@ -238,7 +255,10 @@ def choose_subject(message):
         bot.register_next_step_handler(info, update_subject_url)
     elif message.text == "Удалить предмет":
         bot.register_next_step_handler(info, delete_subject)
-    elif message.text == "Добавить новый дедлайн" or message.text == "Редактировать дедлайн":
+    elif (
+        message.text == "Добавить новый дедлайн"
+        or message.text == "Редактировать дедлайн"
+    ):
         action = message.text
         bot.register_next_step_handler(info, choose_deadline_action, action)
 
@@ -296,7 +316,9 @@ def update_subject_deadline(message, action):
         bot.register_next_step_handler(info, update_subject_deadline, action)
         return
     else:
-        info = bot.send_message(message.chat.id, "Введи дату дедлайна в формате\nDD/MM/YYYY")
+        info = bot.send_message(
+            message.chat.id, "Введи дату дедлайна в формате\nDD/MM/YYYY"
+        )
     # функция сохраняет номер выбранной работы в переменную COL и регистрирует следующий шаг
     # обработки ввода - обновление ячейки с новым дедлайном в таблице.
     COL += int(message.text) + 1
@@ -315,7 +337,9 @@ def add_new_subject(message):
     # просим ввести полную ссылку на таблицу с баллами по этому предмету и регистрируем обработчик
     # следующего сообщения с помощью bot.register_next_step_handler, который будет вызван,
     # когда пользователь отправит ссылку
-    info = bot.send_message(message.chat.id, "Введи полную ссылку на таблицу с баллами по этому предмету")
+    info = bot.send_message(
+        message.chat.id, "Введи полную ссылку на таблицу с баллами по этому предмету"
+    )
     bot.register_next_step_handler(info, add_new_subject_url)
 
 
@@ -323,7 +347,11 @@ def add_new_subject_url(message):
     """Вносим новую ссылку на таблицу предмета в Google-таблицу"""
     # Если пользовательский ввод содержит "www." в первых четырех символах, функция добавляет "https://"
     # в начало строки ввода
-    text = "https:///" + message.text if (len(message.text) > 3 and message.text[:4] == "www.") else message.text
+    text = (
+        "https:///" + message.text
+        if (len(message.text) > 3 and message.text[:4] == "www.")
+        else message.text
+    )
     # функция проверяет, является ли результирующий URL допустимым, вызывая другую функцию is_valid_urlфункция
     # проверяет, является ли результирующий URL допустимым, вызывая другую функцию is_valid_url
     is_valid = is_valid_url(text)
@@ -380,14 +408,23 @@ def update_subject_url(message):
 
 
 def update_cell_data(message, action):
-    if action == "Введи новую ссылку" or action == "Cсылка не рабочая. Введи нормальную.":
+    if (
+        action == "Введи новую ссылку"
+        or action == "Cсылка не рабочая. Введи нормальную."
+    ):
         # функция добавляет https:// к введенной ссылке, если пользователь не добавил этот
         # префикс и введенная ссылка начинается с www
-        text = "https://" + message.text if (len(message.text) > 3 and message.text[:4] == "www.") else message.text
+        text = (
+            "https://" + message.text
+            if (len(message.text) > 3 and message.text[:4] == "www.")
+            else message.text
+        )
         # функция проверяет, является ли введенная ссылка действительной ссылкой с помощью библиотеки validators
         is_valid = validators.url(text)
         if not is_valid:
-            new = bot.send_message(message.chat.id, "Cсылка не рабочая. Введи нормальную.")
+            new = bot.send_message(
+                message.chat.id, "Cсылка не рабочая. Введи нормальную."
+            )
             bot.register_next_step_handler(new, update_cell_data, new.text)
             return
         message.text = text
@@ -454,7 +491,10 @@ def clear_subject_list(message):
 
 @bot.message_handler(commands=["start"])
 def greetings(message):
-    bot.send_message(message.chat.id, "На связи Octobotus!\nСвоими 8 щупальцами помогу тебе разгрести дедлайны")
+    bot.send_message(
+        message.chat.id,
+        "На связи Octobotus!\nСвоими 8 щупальцами помогу тебе разгрести дедлайны",
+    )
     # функция вызывает функцию access_current_sheet(), чтобы получить данные текущей Google-таблицы
     table_data = access_current_sheet()
     # Если данные получены успешно (if table_data), функция извлекает информацию о предметах из третьего
@@ -482,13 +522,17 @@ def greetings(message):
 
 @bot.message_handler(commands=["start"])
 def start(message):
-    start_markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
+    start_markup = telebot.types.ReplyKeyboardMarkup(
+        resize_keyboard=True, one_time_keyboard=True
+    )
     start_markup.row("Подключить Google-таблицу")
     start_markup.row("Посмотреть дедлайны на этой неделе")
     start_markup.row("Редактировать дедлайн")
     # start_markup.row("Внести новый дедлайн") несогласованность действий
     start_markup.row("Редактировать предметы")
-    info = bot.send_message(message.chat.id, "Что хотите сделать?", reply_markup=start_markup)
+    info = bot.send_message(
+        message.chat.id, "Что хотите сделать?", reply_markup=start_markup
+    )
     bot.register_next_step_handler(info, choose_action)
 
 
