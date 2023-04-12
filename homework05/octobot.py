@@ -7,7 +7,6 @@ import pandas as pd
 import telebot
 import validators
 
-
 bot = telebot.TeleBot("6055195312:AAHUl2VodKXqqT6YxNmd-E16Fg79wxphXLo")
 # создаем две переменные ROW и COL и присваиваем им значения 0. В этом случае,
 # мы можем использовать эти переменные для хранения значений строк и столбцов
