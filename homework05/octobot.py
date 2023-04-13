@@ -495,6 +495,7 @@ def start(message):
     start_markup.row("Редактировать предметы")
     info = bot.send_message(message.chat.id, "Что хотите сделать?", reply_markup=start_markup)
     bot.register_next_step_handler(info, choose_action)
+    pass
 
 
 if __name__ == "__main__":
