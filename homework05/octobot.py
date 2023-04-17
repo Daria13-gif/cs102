@@ -140,7 +140,7 @@ def choose_action(message):
         deadline_count = 0
         # идем по строкам таблицы и по стоблцам (начиная со второго,
         # так как первый содержит названия работ)
-        deadlines = ''
+        deadlines = ""
         for i in range(df.shape[0]):
             for j in range(2, df.shape[1]):
                 # извлекает данные ячейки i, j из df
@@ -157,7 +157,7 @@ def choose_action(message):
                         # формируется с помощью метода bot.send_message с использованием
                         # форматирования строк и HTML-разметки
                         deadline_count += 1
-                        deadlines += f"{df.iat[i, 0]}. Работа №{j - 1}\nДедлайн <b>{df.iat[i, j]}</b>" + '\n'
+                        deadlines += f"{df.iat[i, 0]}. Работа №{j - 1}\nДедлайн <b>{df.iat[i, j]}</b>" + "\n"
         if deadlines:
             bot.send_message(
                 message.chat.id,
@@ -322,7 +322,7 @@ def add_new_subject(message):
     table_data = access_current_sheet()
     ws = table_data[0]
     df = table_data[2]
-    # проверяем, что введенный предмет не совпадает с предметом из списка
+    # проверяем, что введенный предмет не совпадает с предметом из спискаву
     if message.text in df.Subject.values.tolist():
         info = bot.send_message(
             message.chat.id,
@@ -459,7 +459,7 @@ def update_cell_datetime(message):
     table_data = access_current_sheet()
     ws = table_data[0]
     # cипользуем replace, чтобы заменить разделитель, заданный пользователем
-    ws.update_cell(ROW, COL, message.text.replace(find_divider(message.text), '/'))
+    ws.update_cell(ROW, COL, message.text.replace(find_divider(message.text), "/"))
     bot.send_message(message.chat.id, "Готово!")
     sleep(2)
     start(message)
@@ -506,10 +506,10 @@ def greetings(message):
         bot.send_message(message.chat.id, "Доступные предметы")
         # функция проходит по каждой строке данных о предметах
         # создаем строку, в которую сохраняем все наши предметы
-        subjects = ''
+        subjects = ""
         for i in range(df.shape[0]):
             # добавляем каждый предмет в строку
-            subjects += f"<a href='{df.at[i, 'Link']}'> {df.at[i, 'Subject']} </a>" + '\n'
+            subjects += f"<a href='{df.at[i, 'Link']}'> {df.at[i, 'Subject']} </a>" + "\n"
             # и отправляет сообщение пользователю с помощью bot.send_message().
             # Это сообщение содержит имя предмета в виде ссылки
             # В параметре parse_mode устанавливается значение "HTML",
