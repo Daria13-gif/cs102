@@ -33,7 +33,6 @@ def is_valid_date(date: str = "01/01/00", divider: str = "/") -> bool:
     - пользователь не должен быть обязан вводить конкретный формат даты
     (например, только через точку или только через слеш)"""
     # опеределяем текущую дату
-    divider = find_divider(date)
     today = datetime.now()
     # пытаемся преобразовать строку "date" в объект даты с помощью
     # функции "convert_date"
@@ -445,7 +444,7 @@ def update_cell_data(message, action):
 def update_cell_datetime(message):
     # Если сообщение не соответствует формату даты или не имеет адекватных временных рамок,
     # то функция отправляет сообщение об ошибке
-    if not is_valid_date(message.text):
+    if not is_valid_date(message.text, divider=find_divider(message.text)):
         info = bot.send_message(
             message.chat.id,
             "Ошибочка. Дата должна соответствовать форматy DD/MM/YYYY и иметь адекватные временные рамки."
