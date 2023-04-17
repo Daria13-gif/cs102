@@ -12,7 +12,11 @@ bot = telebot.TeleBot("6055195312:AAHUl2VodKXqqT6YxNmd-E16Fg79wxphXLo")
 # мы можем использовать эти переменные для хранения значений строк и столбцов
 # в таблице
 ROW, COL = 0, 0
+table = True
 
+# функция, котора опредделят разделитель даты по второму символу
+def find_divider(date):
+    return date[2]
 
 # функция используется для проверки валидности даты
 # Функция принимает два аргумента: строку "date", которая содержит дату для
@@ -27,6 +31,7 @@ def is_valid_date(date: str = "01/01/00", divider: str = "/") -> bool:
     - пользователь не должен быть обязан вводить конкретный формат даты
     (например, только через точку или только через слеш)"""
     # опеределяем текущую дату
+    divider = find_divider(date)
     today = datetime.now()
     # пытаемся преобразовать строку "date" в объект даты с помощью
     # функции "convert_date"
@@ -101,7 +106,7 @@ def choose_action(message):
     """Обрабатываем действия верхнего уровня"""
     if message.text == "Подключить Google-таблицу":
         msg = bot.send_message(message.chat.id, "Отправь мне полную ссылку на таблицу")
-        # регистрируеv обработчик для следующего сообщения, отправляемого пользователем,
+        # регистрируем обработчик для следующего сообщения, отправляемого пользователем,
         # которое будет использоваться для подключения к указанному листу
         bot.register_next_step_handler(msg, connect_table)
 
@@ -135,6 +140,7 @@ def choose_action(message):
         deadline_count = 0
         # идем по строкам таблицы и по стоблцам (начиная со второго,
         # так как первый содержит названия работ)
+        deadlines = ''
         for i in range(df.shape[0]):
             for j in range(2, df.shape[1]):
                 # извлекает данные ячейки i, j из df
@@ -151,12 +157,14 @@ def choose_action(message):
                         # формируется с помощью метода bot.send_message с использованием
                         # форматирования строк и HTML-разметки
                         deadline_count += 1
-                        bot.send_message(
-                            message.chat.id,
-                            f"{df.iat[i, 0]}. Работа №{j - 1}\nДедлайн <b>{df.iat[i, j]}</b>",
-                            parse_mode="HTML",
-                        )
-        if deadline_count == 0:
+                        deadlines += f"{df.iat[i, 0]}. Работа №{j - 1}\nДедлайн <b>{df.iat[i, j]}</b>" + '\n'
+        if deadlines:
+            bot.send_message(
+                message.chat.id,
+                deadlines,
+                parse_mode="HTML",
+            )
+        else:
             bot.send_message(message.chat.id, "Дедлайнов на ближайшей неделе нет. Гуляем!")
         sleep(deadline_count)
         start(message)
@@ -226,6 +234,7 @@ def choose_subject(message):
     # из нее данные в формате pandas dataframe и итерируемся по ним, добавляя каждый предмет
     # в разметку клавиатуры
     table_data = access_current_sheet()
+    # извлекаем данные таблицы в переменную df
     df = table_data[2]
     for i in range(df.shape[0]):
         markup.row(df.at[i, "Subject"])
@@ -268,6 +277,7 @@ def update_subject_deadline(message, action):
     # о дедлайнах по выбранному предмету
     table_data = access_current_sheet()
     ws = table_data[0]
+    # извлекаем данные таблицы в переменную df
     df = table_data[2]
     # если введенный номер работы больше, чем количество работ, уже
     # содержащихся в таблице, то бот отправляет сообщение об ошибке
@@ -286,7 +296,7 @@ def update_subject_deadline(message, action):
     if current_date:
         info = bot.send_message(
             message.chat.id,
-            f"Cейчас по этой работе стоит дедлайн <b>{current_date}</b>.\nВведи новую дату в формате\nDD/MM/YYYY",
+            f"Cейчас по этой работе стоит дедлайн <b>{current_date}</b>.\nВведи новую дату в формате\nDD/MM/YY",
             parse_mode="HTML",
         )
     # Если же такой даты нет, то бот отправляет сообщение об ошибке
@@ -298,7 +308,7 @@ def update_subject_deadline(message, action):
         bot.register_next_step_handler(info, update_subject_deadline, action)
         return
     else:
-        info = bot.send_message(message.chat.id, "Введи дату дедлайна в формате\nDD/MM/YYYY")
+        info = bot.send_message(message.chat.id, "Введи дату дедлайна в формате\nDD/MM/YY")
     # функция сохраняет номер выбранной работы в переменную COL и регистрирует следующий шаг
     # обработки ввода - обновление ячейки с новым дедлайном в таблице.
     COL += int(message.text) + 1
@@ -311,14 +321,25 @@ def add_new_subject(message):
     # а именно: рабочий лист (ws) и pandas-датафрейм (df), содержащий информацию о предметах и дедлайнах
     table_data = access_current_sheet()
     ws = table_data[0]
+    df = table_data[2]
+    # проверяем, что введенный предмет не совпадает с предметом из списка
+    if message.text in df.Subject.values.tolist():
+        info = bot.send_message(
+            message.chat.id,
+            "Такой предмет уже есть. Попробуй еще раз",
+        )
+        bot.register_next_step_handler(info, add_new_subject)
+        return
+
     # добавляем новую строку в таблицу, содержащую только название предмета,
     # которое пользователь ввел в сообщении
-    ws.append_row([message.text])
-    # просим ввести полную ссылку на таблицу с баллами по этому предмету и регистрируем обработчик
-    # следующего сообщения с помощью bot.register_next_step_handler, который будет вызван,
-    # когда пользователь отправит ссылку
-    info = bot.send_message(message.chat.id, "Введи полную ссылку на таблицу с баллами по этому предмету")
-    bot.register_next_step_handler(info, add_new_subject_url)
+    else:
+        ws.append_row([message.text])
+        # просим ввести полную ссылку на таблицу с баллами по этому предмету и регистрируем обработчик
+        # следующего сообщения с помощью bot.register_next_step_handler, который будет вызван,
+        # когда пользователь отправит ссылку
+        info = bot.send_message(message.chat.id, "Введи полную ссылку на таблицу с баллами по этому предмету")
+        bot.register_next_step_handler(info, add_new_subject_url)
 
 
 def add_new_subject_url(message):
@@ -338,6 +359,7 @@ def add_new_subject_url(message):
     # соответствующие им URL-адреса листов
     table_data = access_current_sheet()
     ws = table_data[0]
+    # извлекаем данные таблицы в переменную df
     df = table_data[2]
     # функция обновляет рабочий лист новым URL-адресом листа для новой темы,
     # добавляя новую строку к рабочему листу и вставляя URL-адрес во второй столбец
@@ -352,6 +374,7 @@ def update_subject_title(message):
     # access_current_sheet() - возвращает данныее текущей таблицы
     table_data = access_current_sheet()
     ws = table_data[0]
+
     global ROW, COL
     # происходит поиск ячейки в таблице, содержащей текст сообщения
     # пользователя (cell = ws.find(message.text)).
@@ -360,11 +383,13 @@ def update_subject_title(message):
     ROW = cell.row
     COL = cell.col
     new = bot.send_message(message.chat.id, "Введи новое название")
+
     # функция register_next_step_handler регистрирует следующую функцию
     # update_cell_data в качестве обработчика следующего шага.
     # Эта функция будет вызвана, когда пользователь введет новое название
     # предмета. Вторым параметром update_cell_data передается текст,
     # введенный пользователем в new.text.
+
     bot.register_next_step_handler(new, update_cell_data, new.text)
 
 
@@ -399,10 +424,20 @@ def update_cell_data(message, action):
     # update_cell() для строки ROW и столбца COL с новым значением message.text
     table_data = access_current_sheet()
     ws = table_data[0]
-    ws.update_cell(ROW, COL, message.text)
-    bot.send_message(message.chat.id, "Готово!")
-    sleep(2)
-    start(message)
+    df = table_data[2]
+    # проверяем, что введенный предмет не совпадает с предметом из списка
+    if message.text in df.Subject.values.tolist():
+        info = bot.send_message(
+            message.chat.id,
+            "Такой предмет уже есть. Попробуй еще раз",
+        )
+        bot.register_next_step_handler(info, update_cell_data, action)
+        return
+    else:
+        ws.update_cell(ROW, COL, message.text)
+        bot.send_message(message.chat.id, "Готово!")
+        sleep(2)
+        start(message)
 
 
 def update_cell_datetime(message):
@@ -423,7 +458,8 @@ def update_cell_datetime(message):
     # update_cell() для строки ROW и столбца COL с новым значением message.text
     table_data = access_current_sheet()
     ws = table_data[0]
-    ws.update_cell(ROW, COL, message.text)
+    # cипользуем replace, чтобы заменить разделитель, заданный пользователем
+    ws.update_cell(ROW, COL, message.text.replace(find_divider(message.text), '/'))
     bot.send_message(message.chat.id, "Готово!")
     sleep(2)
     start(message)
@@ -469,26 +505,33 @@ def greetings(message):
         df = table_data[2]
         bot.send_message(message.chat.id, "Доступные предметы")
         # функция проходит по каждой строке данных о предметах
+        # создаем строку, в которую сохраняем все наши предметы
+        subjects = ''
         for i in range(df.shape[0]):
+            # добавляем каждый предмет в строку
+            subjects += f"<a href='{df.at[i, 'Link']}'> {df.at[i, 'Subject']} </a>" + '\n'
             # и отправляет сообщение пользователю с помощью bot.send_message().
             # Это сообщение содержит имя предмета в виде ссылки
             # В параметре parse_mode устанавливается значение "HTML",
             # чтобы ссылка была отображена как активная.
             # Также отключается предварительный просмотр веб-страницы,
             # чтобы ссылка не отображалась как изображение.
-            bot.send_message(
-                message.chat.id,
-                f"<a href='{df.at[i, 'Link']}'> {df.at[i, 'Subject']} </a>",
-                parse_mode="HTML",
-                disable_web_page_preview=True,
-            )
+        bot.send_message(
+            message.chat.id,
+            subjects,
+            parse_mode="HTML",
+            disable_web_page_preview=True,
+        )
     start(message)
 
 
 @bot.message_handler(commands=["start"])
 def start(message):
+    global table
     start_markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True)
-    start_markup.row("Подключить Google-таблицу")
+    if table:
+        start_markup.row("Подключить Google-таблицу")
+        table = False
     start_markup.row("Посмотреть дедлайны на этой неделе")
     start_markup.row("Редактировать дедлайн")
     # start_markup.row("Внести новый дедлайн") несогласованность действий
