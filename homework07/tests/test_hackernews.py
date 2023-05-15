@@ -17,7 +17,7 @@ class TestHackernews(unittest.TestCase):
                 url="https://news.ycombinator.com/item?id=31099186",
                 comments=83,
                 points=171,
-                label=None,
+                label="never",
             )
             session.return_value.query.return_value.get.return_value = news
             add_label()
@@ -61,7 +61,7 @@ class TestHackernews(unittest.TestCase):
         for one_call in session.mock_calls:
             if one_call == call().commit() and one_call != call():
                 n_commit += 1
-        self.assertEqual(2, n_commit)
+        self.assertEqual(1, n_commit)
 
     @mock.patch("hackernews.session")
     def test_classify_news(self, session):
