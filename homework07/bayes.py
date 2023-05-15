@@ -84,4 +84,3 @@ if __name__ == "__main__":
     model = NaiveBayesClassifier(1)
     model.fit(X_train, y_train)
     print(model.score(X_test, y_test))
-    
