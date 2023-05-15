@@ -1,12 +1,13 @@
 import csv
 import string
 import unittest
+import pprint
 
 from bayes import NaiveBayesClassifier
 
-PATH_FOR_GIT = "/home/runner/work/cs102/cs102/homework06/data/"
+PATH_FOR_GIT = "/Users/dariapolyakova/PycharmProjects/cs102/homework06/data/"
 
-
+#
 class TestBayes(unittest.TestCase):
     def test_fit_predict(self):
         X_train = [
