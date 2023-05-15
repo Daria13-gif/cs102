@@ -61,21 +61,24 @@ def extract_news(parser):
             # (на это указывает наличие класса "hnuser" в ссылке в строке),
             # функция извлекает имя автора, количество баллов, полученных статьей,
             # и количество комментариев, полученных статьей, и сохраняет их в словаре ninf.
-            if n.find("a").attrs:
-                if "class" in n.find("a").attrs and n.find("a").attrs["class"][0] == "hnuser":
-                    ninf["author"] = n.find("a").string
-                    points_string = n.find("span", class_="score").string
-                    if points_string is not None:
-                        ninf["points"] = int(points_string.split()[0])
-                    com = str(n.findAll("a")[-1].string.split()[0])
-                    if com.isdigit():
-                        ninf["comments"] = int(com)
-                    else:
-                        ninf["comments"] = 0
-                    if ninf.get("title") is not None and ninf.get("url") is not None:
-                        if ninf and ninf not in news_list:
-                            news_list.append(ninf)
-                        ninf = {}
+            try:
+                if n.find("a").attrs:
+                    if "class" in n.find("a").attrs and n.find("a").attrs["class"][0] == "hnuser":
+                        ninf["author"] = n.find("a").string
+                        points_string = n.find("span", class_="score").string
+                        if points_string is not None:
+                            ninf["points"] = int(points_string.split()[0])
+                        com = str(n.findAll("a")[-1].string.split()[0])
+                        if com.isdigit():
+                            ninf["comments"] = int(com)
+                        else:
+                            ninf["comments"] = 0
+                        if ninf.get("title") is not None and ninf.get("url") is not None:
+                            if ninf and ninf not in news_list:
+                                news_list.append(ninf)
+                            ninf = {}
+            except:
+                pass
             else:
                 break
         # После обработки каждой строки функция проверяет, содержит ли словарь ninf
