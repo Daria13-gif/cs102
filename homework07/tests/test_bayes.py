@@ -4,7 +4,7 @@ import unittest
 
 from bayes import NaiveBayesClassifier
 
-PATH_FOR_GIT = "/home/runner/work/cs102/cs102/homework06/data/"
+PATH_FOR_GIT = "/home/runner/work/cs102/cs102/homework07/data/SMSSpamCollection"
 
 
 class TestBayes(unittest.TestCase):
@@ -53,7 +53,7 @@ class TestBayes(unittest.TestCase):
         return s.translate(translator)
 
     def test_spam(self):
-        with open(PATH_FOR_GIT + "SMSSpamCollection", encoding="utf-8") as f:
+        with open(PATH_FOR_GIT, encoding="utf-8") as f:
             data = list(csv.reader(f, delimiter="\t"))
         X, y = [], []
         for target, msg in data:
