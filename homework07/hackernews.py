@@ -3,7 +3,6 @@ from bottle import redirect, request, route, run, template
 from db import News, session
 from scraputils import get_news
 
-
 bayes = NaiveBayesClassifier(alpha=0.05)
 
 
