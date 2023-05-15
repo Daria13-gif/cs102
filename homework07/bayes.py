@@ -1,5 +1,6 @@
 import random
 from math import log
+
 import numpy as np
 from db import News, session
 
