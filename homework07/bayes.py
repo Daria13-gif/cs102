@@ -25,7 +25,6 @@ def label_news():
 # Класс NaiveBayesClassifier, реализующий алгоритм Naive
 # Bayes для классификации текста
 class NaiveBayesClassifier:
-
     def __init__(self, alpha=0.05):
         self.alpha = alpha
         self.dictionary = {}
@@ -44,8 +43,7 @@ class NaiveBayesClassifier:
                 words_per_class[y[i]] += 1
         for word, counter in self.dictionary.items():
             probabilities = {
-                key: (counter[key] + self.alpha)
-                     / (words_per_class[key] + self.alpha * len(self.dictionary))
+                key: (counter[key] + self.alpha) / (words_per_class[key] + self.alpha * len(self.dictionary))
                 for key in counter.keys()
             }
             self.dictionary[word] = probabilities
@@ -59,8 +57,7 @@ class NaiveBayesClassifier:
             for word in text.split():
                 if word in self.dictionary:
                     for key in predict.keys():
-                        predict[key] += log(
-                            self.dictionary[word][key])
+                        predict[key] += log(self.dictionary[word][key])
 
             predicted_classes = dict(sorted(predict.items(), key=lambda x: x[1]))
             predictions.append(list(predicted_classes)[-1])
@@ -74,4 +71,3 @@ class NaiveBayesClassifier:
             if predicted[i] == label:
                 guessed += 1
         return guessed / len(y_test)
-    
