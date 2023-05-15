@@ -1,8 +1,7 @@
+import pandas as pd
 import requests
 from bs4 import BeautifulSoup
-import pandas as pd
 from sqlalchemy import create_engine
-
 
 
 # Цель этой функции - извлечь новостные статьи из заданной веб-страницы и вернуть
