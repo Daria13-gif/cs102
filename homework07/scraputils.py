@@ -1,5 +1,5 @@
 import pandas as pd
-import requests
+import requests  #type: ignore
 from bs4 import BeautifulSoup
 from sqlalchemy import create_engine
 
