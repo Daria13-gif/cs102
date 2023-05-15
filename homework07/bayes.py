@@ -4,7 +4,7 @@ import string
 from collections import Counter, defaultdict
 from math import log
 
-from homework06.db import News, session
+from db import News, session
 
 
 class NaiveBayesClassifier:
