@@ -53,9 +53,9 @@ def extract_news(parser):
                 if site_link:
                     site = site_link.string
                     ninf["url"] = f"{site}"
-            title = n.find("span", class_='titleline')
+            title = n.find("span", class_="titleline")
             if title:
-                ninf['title'] = title.a.text
+                ninf["title"] = title.a.text
         else:
             # Если текущая строка содержит информацию об авторе и комментариях
             # (на это указывает наличие класса "hnuser" в ссылке в строке),
@@ -92,7 +92,7 @@ def extract_news(parser):
 # функция используется для извлечения URL следующей страницы новостных
 # статей с заданной веб-страницы.
 def extract_next_page(parser):
-    """ Extract next page URL """
+    """Extract next page URL"""
     # Сначала функция выбирает второй элемент table на странице, используя метод findAll
     # Индекс [1] используется для выбора второго элемента таблицы, потому что
     # именно там можно найти ссылку "More", исходя из структуры HTML.
@@ -104,11 +104,11 @@ def extract_next_page(parser):
     # href первого тега a. Этот атрибут содержит относительный URL следующей
     # страницы новостных статей.
     link = tbl.findAll("a", {"class": "morelink"})[0]["href"]
-    return 'news' + str(link)
+    return "news" + str(link)
 
 
 def get_news(url, n_pages=1):
-    """ Collect news from a given web page """
+    """Collect news from a given web page"""
     news = []
     while n_pages:
         print("Collecting data from page: {}".format(url))
@@ -117,7 +117,7 @@ def get_news(url, n_pages=1):
         news_list = extract_news(soup)
         next_page = extract_next_page(soup)
         url = "https://news.ycombinator.com/" + next_page
-        print('url', url)
+        print("url", url)
         news.extend(news_list)
         n_pages -= 1
     print(news)
@@ -126,6 +126,6 @@ def get_news(url, n_pages=1):
 
 
 news = get_news("https://news.ycombinator.com", 9)
-conn = create_engine('sqlite:///news.db')
+conn = create_engine("sqlite:///news.db")
 df = pd.DataFrame(news)
-df.to_sql('table_name', conn, if_exists='replace', index=False)
+df.to_sql("table_name", conn, if_exists="replace", index=False)
