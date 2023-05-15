@@ -16,6 +16,6 @@ class News(Base):
     comments = Column(Integer)
     points = Column(Integer)
     label = Column(String)
-
     
-Base.metadata.create_all(bind=engine)
+    
+    Base.metadata.create_all(bing=engine)
