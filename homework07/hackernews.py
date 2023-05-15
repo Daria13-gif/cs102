@@ -33,12 +33,7 @@ def update_news():
     s = session()
     # print(new_news[:5])
     for record in new_news:
-        if (
-                s.query(News)
-                        .filter(News.title == record["title"] and News.author == record["author"])
-                        .first()
-                is None
-        ):
+        if s.query(News).filter(News.title == record["title"] and News.author == record["author"]).first() is None:
             data = News(
                 title=record["title"],
                 author=record["author"],
