@@ -3,7 +3,10 @@ from bottle import redirect, request, route, run, template
 from db import News, session
 from scraputils import get_news
 
-bayes = NaiveBayesClassifier(alpha=0.05)
+try:
+    bayes = NaiveBayesClassifier.load("data/model.bin")
+except FileNotFoundError:
+    bayes = NaiveBayesClassifier(alpha=0.05)
 
 
 @route("/news")
@@ -16,69 +19,67 @@ def news_list():
 @route("/add_label/")
 def add_label():
     label = request.query.label
-    record_id = request.query.id
+    nid = request.query.id
     s = session()
-    record = s.query(News).filter(News.id == record_id).all()[0]
-    record.label = label
-    s.add(record)
+    s.query(News).filter(News.id == nid).first().label = label
+    # news.label = label
+    # s.add(news)
     s.commit()
 
-    if __name__ == "main":
+    # print(news.label)
+    if name == "main":
         redirect("/news")
 
 
 @route("/update")
 def update_news():
-    new_news = get_news("https://news.ycombinator.com/newest", n_pages=5)
     s = session()
-    # print(new_news[:5])
-    for record in new_news:
-        if s.query(News).filter(News.title == record["title"] and News.author == record["author"]).first() is None:
-            data = News(
-                title=record["title"],
-                author=record["author"],
-                url=record["url"],
-                comments=record["comments"],
-                points=record["points"],
-                label=None,
+    news = get_news("https://news.ycombinator.com/newest", 1)
+    for i in news:
+        if not s.query(News).filter(News.title == i["title"]).first():
+            s.add(
+                News(
+                    title=i["title"],
+                    author=i["author"],
+                    url=i["url"],
+                    comments=i["comments"],
+                    points=i["points"],
+                )
             )
-            s.add(data)
     s.commit()
 
-    if __name__ == "main":
+    if name == "main":
         redirect("/news")
 
 
 @route("/classify")
 def classify_news():
     s = session()
-    list_of_train = s.query(News).filter(News.label != None).all()
-    x_train = []
-    y_train = []
-    for i in list_of_train:
-        x_train.append(i.title)
-        y_train.append(i.label)
-    bayes.fit(x_train, y_train)
+    train = s.query(News).filter(News.label != None).all()
+    x = [i.title for i in train]
+    y = [i.label for i in train]
+    bayes.fit(x, y)
     news = s.query(News).filter(News.label == None).all()
-    x = [i.title for i in news]
-    y = bayes.predict(x)
+    X = [i.title for i in news]
+    y = bayes.predict(X)
     for i in range(len(news)):
         news[i].label = y[i]
     s.commit()
-    return sorted(news, key=lambda i: i.label)
+    return sorted(news, key=lambda x: x.label)
 
 
 @route("/recommendations")
 def recommendations():
     s = session()
-    classified_news = s.query(News).filter(News.label == None).all()
-    x = [i.title for i in classified_news]
-    y = bayes.predict(x)
-    for i in range(len(classified_news)):
-        classified_news[i].label = y[i]
+    news = s.query(News).filter(News.label == None).all()
+    X = [i.title for i in news]
+    y = bayes.predict(X)
+    for i in range(len(news)):
+        news[i].label = y[i]
     s.commit()
-    return template("news_recommendations", rows=classified_news)
+    return template("news_template", rows=news)
 
 
-if __name__ == "main":
+if name == "main":
     run(host="localhost", port=1111, debug=False)
+    bayes.save("data/model.bin")
