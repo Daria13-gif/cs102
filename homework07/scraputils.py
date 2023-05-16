@@ -61,7 +61,7 @@ def extract_news(parser):
             # (на это указывает наличие класса "hnuser" в ссылке в строке),
             # функция извлекает имя автора, количество баллов, полученных статьей,
             # и количество комментариев, полученных статьей, и сохраняет их в словаре ninf.
-            if n.find("a").attrs:
+            if n.find("a").attrs:  # type: ignore
                 if "class" in n.find("a").attrs and n.find("a").attrs["class"][0] == "hnuser":
                     ninf["author"] = n.find("a").string
                     points_string = n.find("span", class_="score").string
