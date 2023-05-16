@@ -4,7 +4,7 @@ from db import News, session
 from scraputils import get_news
 
 try:
-    bayes = NaiveBayesClassifier.load("data/model.bin")
+    bayes = NaiveBayesClassifier.load("data/model.bin")  # type: ignore
 except FileNotFoundError:
     bayes = NaiveBayesClassifier(alpha=0.05)
 
