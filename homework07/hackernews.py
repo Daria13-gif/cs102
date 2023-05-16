@@ -23,7 +23,7 @@ def add_label():
     s.add(record)
     s.commit()
 
-    if name == "main":
+    if __name__ == "main":
         redirect("/news")
 
 
@@ -45,7 +45,7 @@ def update_news():
             s.add(data)
     s.commit()
 
-    if name == "main":
+    if __name__ == "main":
         redirect("/news")
 
 
@@ -80,5 +80,5 @@ def recommendations():
     return template("news_recommendations", rows=classified_news)
 
 
-if name == "main":
+if __name__ == "main":
     run(host="localhost", port=1111, debug=False)
