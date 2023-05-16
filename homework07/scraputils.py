@@ -8,12 +8,22 @@ from sqlalchemy import create_engine
 # список словарей, содержащих информацию о каждой статье.
 def extract_news(parser):
     """Extract news from a given web page"""
+    # пустой список news_list для хранения извлеченных новостных статей.
     news_list = []
 
+    # выбираем вторую таблицу на веб-странице с помощью метода findAll в
+    # BeautifulSoup и присваиваем ее переменной tbl.
     tbl = parser.table.findAll("table")[1]
+    # выбираем все строки в таблице с помощью метода findAll
+    # и присваиваем их переменной news
     news = tbl.findAll("tr")
+    # выполняем итерации по каждой строке в news
     for i in range(len(news)):
         n = news[i]
+        # Для каждой третьей строки в таблице (i % 3 == 0`) создается новый словарь
+        # "ninf" для хранения информации о текущей новостной статье.
+        # Словарь инициализируется ключами title, url, author, points и comments со
+        # значениями по умолчанию None, None, None, 0 и 0
         if i % 3 == 0:
             ninf = {
                 "title": None,
@@ -22,24 +32,35 @@ def extract_news(parser):
                 "points": 0,
                 "comments": 0,
             }
+        # Если текущая строка имеет атрибуты (обозначенные n.attrs`), функция проверяет,
+        # является ли класс строки "athing" (атрибут первой строки в каждой новостной
+        # статье)
         if n.attrs:
             if n.attrs["class"][0] == "athing":
+                # Если это так, функция извлекает заголовок и URL новостной статьи из
+                # строки и сохраняет их в словаре ninf.
                 title_link = n.find("a", class_="titlelink")
                 if title_link:
                     link = title_link.get("href")
                     if "http" in link:
                         ninf["url"] = link
+                    # Если URL является относительным путем, начинающимся с "item",
+                    # функция добавляет "https://news.ycombinator.com/" к URL,
+                    # чтобы сделать его полноценным URL.
                     elif "item" in link:
                         ninf["url"] = "https://news.ycombinator.com/" + link
                 site_link = n.find("span", class_="sitestr")
                 if site_link:
                     site = site_link.string
-                    # link = n.findAll("a")[-1].get("href")
                     ninf["url"] = f"{site}"
             title = n.find("span", class_="titleline")
             if title:
                 ninf["title"] = title.a.text
         else:
+            # Если текущая строка содержит информацию об авторе и комментариях
+            # (на это указывает наличие класса "hnuser" в ссылке в строке),
+            # функция извлекает имя автора, количество баллов, полученных статьей,
+            # и количество комментариев, полученных статьей, и сохраняет их в словаре ninf.
             if n.find("a").attrs:
                 if "class" in n.find("a").attrs and n.find("a").attrs["class"][0] == "hnuser":
                     ninf["author"] = n.find("a").string
@@ -57,8 +78,14 @@ def extract_news(parser):
                         ninf = {}
             else:
                 break
+        # После обработки каждой строки функция проверяет, содержит ли словарь ninf
+        # заголовок и URL. Если да, то функция проверяет, не находится ли словарь
+        # ninf уже в списке news_list. Если нет, она добавляет словарь ninf в список
+        # news_list.
         if ninf and ninf not in news_list:
             news_list.append(ninf)
+    # функция возвращает список news_list с последним элементом (который всегда является
+    # пустым словарем), удаленным с помощью нарезки с [:-1].
     return news_list[:-1]
 
 
