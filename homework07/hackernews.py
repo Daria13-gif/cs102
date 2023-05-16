@@ -27,7 +27,7 @@ def add_label():
     s.commit()
 
     # print(news.label)
-    if name == "main":
+    if __name__ == "main":
         redirect("/news")
 
 
@@ -48,7 +48,7 @@ def update_news():
             )
     s.commit()
 
-    if name == "main":
+    if __name__ == "main":
         redirect("/news")
 
 
@@ -80,6 +80,6 @@ def recommendations():
     return template("news_template", rows=news)
 
 
-if name == "main":
+if __name__ == "main":
     run(host="localhost", port=1111, debug=False)
     bayes.save("data/model.bin")
