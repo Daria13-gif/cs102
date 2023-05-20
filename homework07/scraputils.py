@@ -104,7 +104,10 @@ def extract_next_page(parser):
     # поэтому мы используем индекс [0]. Затем осуществляется доступ к атрибуту
     # href первого тега a. Этот атрибут содержит относительный URL следующей
     # страницы новостных статей.
-    link = tbl.findAll("a", {"class": "morelink"})[0]["href"]
+    if tbl.findAll("a", {"class": "morelink"}):
+        link = tbl.findAll("a", {"class": "morelink"})[0]["href"]
+    else:
+        link = ""
     return "news" + str(link)
 
 
