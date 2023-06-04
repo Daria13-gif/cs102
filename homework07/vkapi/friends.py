@@ -56,7 +56,7 @@ class MutualFriends(tp.TypedDict):
 
 
 def get_mutual(
-        source_uid: tp.Optional[int] = None,
+    source_uid: tp.Optional[int] = None,
     target_uid: tp.Optional[int] = None,
     target_uids: tp.Optional[tp.List[int]] = None,
     order: str = "",
@@ -95,7 +95,7 @@ def get_mutual(
                 )
                 for friend in mutual_friends.json()["response"]:
                     all_friends.append(
-                         MutualFriends(
+                        MutualFriends(
                             id=friend["id"],
                             common_friends=list(map(int, friend["common_friends"])),
                             common_count=friend["common_count"],
