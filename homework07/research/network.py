@@ -19,17 +19,16 @@ def ego_network(
     :param friends: Идентификаторы друзей, между которыми устанавливаются связи.
     """
     network = []
-    '''
+    """
     user_friends = get_friends(user_id=user_id)
     friends = friends if friends else user_friends.items
-    '''
+    """
     connections = get_mutual(user_id, target_uids=friends)
     for node in connections:
-        for common in node['common_friends']:
-            network.append((node['id'], common))
+        for common in node["common_friends"]:
+            network.append((node["id"], common))
     return network
 
-#print()
 
 def plot_ego_network(net: tp.List[tp.Tuple[int, int]]) -> None:
     graph = nx.Graph()
