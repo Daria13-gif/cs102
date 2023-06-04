@@ -3,7 +3,7 @@ import unittest
 
 import responses
 
-from research.network import ego_network
+from homework07.research.network import ego_network
 
 
 class EgoNetworkTestCase(unittest.TestCase):
