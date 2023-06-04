@@ -19,7 +19,6 @@ def get_access_token(client_id: int, scope: str) -> None:
     webbrowser.open_new_tab(url)
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("client_id", help="Application Id", type=int)
