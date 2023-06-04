@@ -3,7 +3,7 @@ import unittest
 
 import responses
 
-from research.age import age_predict
+from homework07.research.age import age_predict
 
 
 class AgeTestCase(unittest.TestCase):
