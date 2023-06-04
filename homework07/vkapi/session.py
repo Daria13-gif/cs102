@@ -28,8 +28,8 @@ class Session:
         self.retry_strategy = Retry(
             total=max_retries,
             backoff_factor=backoff_factor,
-            allowed_methods =["GET", "POST"],
-            status_forcelist=list(range(400, 600))
+            allowed_methods=["GET", "POST"],
+            status_forcelist=list(range(400, 600)),
         )
         self.adapter = HTTPAdapter(max_retries=self.retry_strategy)
         self.session.mount(base_url, self.adapter)
@@ -43,4 +43,3 @@ class Session:
         kwargs["timeout"] = kwargs["timeout"] if "timeout" in kwargs else self.timeout
         response = self.session.post(self.base_url + "/" + url, *args, **kwargs)
         return response
-
