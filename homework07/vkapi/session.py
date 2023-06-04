@@ -44,4 +44,3 @@ class Session:
         response = self.session.post(self.base_url + "/" + url, *args, **kwargs)
         return response
 
-

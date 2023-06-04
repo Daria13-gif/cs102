@@ -29,6 +29,7 @@ def ego_network(
             network.append((node['id'], common))
     return network
 
+#print()
 
 def plot_ego_network(net: tp.List[tp.Tuple[int, int]]) -> None:
     graph = nx.Graph()
@@ -79,7 +80,6 @@ def describe_communities(
 
 if __name__ == "__main__":
     net = ego_network(friends=[761665596, 666096932, 600715664, 8244661])
-    print(net)
     plot_communities(net)
     communities = get_communities(net)
     user_friends = get_friends(user_id=None, fields=["first_name", "last_name"])
