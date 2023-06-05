@@ -80,5 +80,5 @@ if __name__ == "__main__":
     net = ego_network(friends=[761665596, 666096932, 600715664, 8244661])
     plot_communities(net)
     communities = get_communities(net)
-    user_friends = get_friends(user_id=None, fields=["first_name", "last_name"])
-    print(describe_communities(communities, user_friends.items, fields=["first_name", "last_name"]))
+    user_friends = get_friends(user_id=None, fields=["first_name", "last_name"])  # type: ignore 
+    print(describe_communities(communities, user_friends.items, fields=["first_name", "last_name"]))  # type: ignore
