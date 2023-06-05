@@ -5,7 +5,7 @@ import httpretty
 import responses
 from requests.exceptions import ConnectionError, HTTPError, ReadTimeout, RetryError
 
-from homework07.vkapi.session import Session
+from vkapi.session import Session
 
 
 class TestSession(unittest.TestCase):
