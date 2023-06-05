@@ -1,4 +1,4 @@
-from vkapi import config
+from vkapi.config import VK_CONFIG
 from vkapi.session import Session
 
-session = Session(config.VK_CONFIG["domain"])
+session = Session(VK_CONFIG["domain"])
