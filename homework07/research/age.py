@@ -2,7 +2,7 @@ import datetime as dt
 import statistics
 import typing as tp
 
-from homework07.vkapi.friends import get_friends
+from vkapi.friends import get_friends
 
 
 def age_predict(user_id: int) -> tp.Optional[float]:
