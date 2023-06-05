@@ -2,8 +2,7 @@ import re
 import unittest
 
 import responses
-
-from homework07.research.network import ego_network
+from research.network import ego_network
 
 
 class EgoNetworkTestCase(unittest.TestCase):
