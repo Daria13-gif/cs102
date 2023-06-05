@@ -3,8 +3,8 @@ import math
 import time
 import typing as tp
 
-from homework07.vkapi.config import VK_CONFIG
-from homework07.vkapi.session import Session
+from vkapi.config import VK_CONFIG
+from vkapi.session import Session
 
 QueryParams = tp.Optional[tp.Dict[str, tp.Union[str, int]]]
 
