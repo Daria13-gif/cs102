@@ -12,10 +12,13 @@ def is_prime(n: int) -> bool:
     >>> is_prime(8)
     False
     """
-    for i in range(2, int(n**0.5) + 1):
+    if n < 2:
+        return False
+    for i in range(2, int(n**0.5) + 1, 2):
         if n % i == 0:
             return False
     return True
+    pass
 
 
 def gcd(a: int, b: int) -> int:
@@ -26,10 +29,11 @@ def gcd(a: int, b: int) -> int:
     >>> gcd(3, 7)
     1
     """
-    while True:
-        if a % b == 0:  # если а делится без остатка на b, то b - НОД
-            return b
-        a, b = b, a % b  # если b не НОД, то будем делить b на остаток от деления а на b
+    if b == 0:
+        return abs(a)
+    else:
+        return gcd(b, a % b)
+    pass
 
 
 def multiplicative_inverse(e: int, phi: int) -> int:
@@ -39,21 +43,19 @@ def multiplicative_inverse(e: int, phi: int) -> int:
     >>> multiplicative_inverse(7, 40)
     23
     """
+    lst = []
+    no1 = phi
+    no2 = e
+    while no1 % no2 != 0:
+        lst.append(no1 // no2)
+        no1, no2 = no2, no1 % no2
     x = 0
     y = 1
-    n = phi
-    i = 0
-    while True:
-        i += 1
-        q = phi // e  # находим целую часть от деления
-        r = phi % e  # находим остаток от деления
-        if r == 0:
-            if i % 2 == 1:  # на каждом нечетном шаге получаем прямое обратное(знак)
-                return y
-            else:  # на каждом четном получаем противоположное обратное
-                return n - y
-        x, y = y, q * y + x
-        e, phi = r, e
+    length_lst = len(lst)
+    for i in range(len(lst)):
+        x, y = y, x - y * lst[length_lst - 1 - i]
+    return y % phi
+    pass
 
 
 def generate_keypair(p: int, q: int) -> tp.Tuple[tp.Tuple[int, int], tp.Tuple[int, int]]:
@@ -62,10 +64,7 @@ def generate_keypair(p: int, q: int) -> tp.Tuple[tp.Tuple[int, int], tp.Tuple[in
     elif p == q:
         raise ValueError("p and q cannot be equal")
 
-    # n = pq
     n = p * q
-
-    # phi = (p-1)(q-1)
     phi = (p - 1) * (q - 1)
 
     # Choose an integer e such that e and phi(n) are coprime
