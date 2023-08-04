@@ -1,0 +1,478 @@
+Index: homework07/research/age.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import datetime as dt\nimport statistics\nimport typing as tp\n\nfrom homework07.vkapi.friends import get_friends\n\n\ndef age_predict(user_id: int) -> tp.Optional[float]:\n    \"\"\"\n    Наивный прогноз возраста пользователя по возрасту его друзей.\n\n    Возраст считается как медиана среди возраста всех друзей пользователя\n\n    :param user_id: Идентификатор пользователя.\n    :return: Медианный возраст пользователя.\n    \"\"\"\n    ages = []\n    friends = get_friends(user_id, fields=['bdate'])\n    for friend in friends.items:\n        try:\n            age = dt.datetime.today().year - int(friend['bdate'].split('.')[2])\n            ages.append(age)\n        except:\n            pass\n    if ages:\n        return statistics.median(ages)\n    return None\n\n\nif __name__ == \"__main__\":\n    print(age_predict(250240920))
+===================================================================
+diff --git a/homework07/research/age.py b/homework07/research/age.py
+--- a/homework07/research/age.py	
++++ b/homework07/research/age.py	
+@@ -5,6 +5,8 @@
+ from homework07.vkapi.friends import get_friends
+ 
+ 
++# Функция прогнозирует возраст пользователя на основе возраста его друзей.
++# Возраст считается как медиана среди возраста всех друзей пользователя.
+ def age_predict(user_id: int) -> tp.Optional[float]:
+     """
+     Наивный прогноз возраста пользователя по возрасту его друзей.
+@@ -14,14 +16,27 @@
+     :param user_id: Идентификатор пользователя.
+     :return: Медианный возраст пользователя.
+     """
++    # Создается пустой список `ages`, который будет содержать возраста друзей пользователя.
+     ages = []
++    # Вызывается функция `get_friends()`, которая возвращает информацию о друзьях пользователя,
++    # включая их дату рождения (`bdate`).
+     friends = get_friends(user_id, fields=['bdate'])
++    # Происходит итерация по каждому другу в списке друзей `friends.items`.
+     for friend in friends.items:
++        # Для каждого друга выполняется следующее:
++        # Пытается извлечь год рождения из строки `friend['bdate']` с помощью `split('.')`
++        # и преобразовать его в целое число.
++        # Вычисляется возраст путем вычитания года рождения из текущего года
++        # (полученного с помощью `dt.datetime.today().year`).
++        # Полученный возраст добавляется в список `ages`.
++        # Если возникла ошибка при извлечении года рождения или преобразовании его в число,
++        # происходит переход к следующему другу без добавления возраста в список.
+         try:
+             age = dt.datetime.today().year - int(friend['bdate'].split('.')[2])
+             ages.append(age)
+         except:
+             pass
++    # Если список `ages` не пустой, то возвращается медианное значение возрастов.
+     if ages:
+         return statistics.median(ages)
+     return None
+Index: homework07/vkapi/friends.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import dataclasses\nimport math\nimport time\nimport typing as tp\n\nfrom homework07.vkapi.config import VK_CONFIG\n# from vkapi.exceptions import APIError\n\nfrom homework07.vkapi.session import Session\n\nQueryParams = tp.Optional[tp.Dict[str, tp.Union[str, int]]]\n\n\n@dataclasses.dataclass(frozen=True)\nclass FriendsResponse:\n    count: int\n    items: tp.Union[tp.List[int], tp.List[tp.Dict[str, tp.Any]]]\n\n\ndef get_friends(\n        user_id: int, count: int = 5000, offset: int = 0, fields: tp.Optional[tp.List[str]] = None\n) -> FriendsResponse:\n    \"\"\"\n    Получить список идентификаторов друзей пользователя или расширенную информацию\n    о друзьях пользователя (при использовании параметра fields).\n\n    :param user_id: Идентификатор пользователя, список друзей для которого нужно получить.\n    :param count: Количество друзей, которое нужно вернуть.\n    :param offset: Смещение, необходимое для выборки определенного подмножества друзей.\n    :param fields: Список полей, которые нужно получить для каждого пользователя.\n    :return: Список идентификаторов друзей пользователя или список пользователей.\n    \"\"\"\n    start = Session(VK_CONFIG[\"domain\"])\n    resp = FriendsResponse(0, [0])\n    try:\n        friends = start.get(\"friends.get\", params={\"access_token\": VK_CONFIG[\"access_token\"],\n                                                   \"v\": VK_CONFIG[\"version\"],\n                                                   \"user_id\": user_id,\n                                                   \"count\": count,\n                                                   \"offset\": offset,\n                                                   \"fields\": fields})\n        resp = FriendsResponse(friends.json()['response']['count'], friends.json()['response']['items'])\n        print(resp)\n    except:\n        pass\n    return resp\n\n\nclass MutualFriends(tp.TypedDict):\n    id: int\n    common_friends: tp.List[int]\n    common_count: int\n\n\ndef get_mutual(\n        source_uid: tp.Optional[int] = None,\n        target_uid: tp.Optional[int] = None,\n        target_uids: tp.Optional[tp.List[int]] = None,\n        order: str = \"\",\n        count: tp.Optional[int] = None,\n        offset: int = 0,\n        progress=None,\n) -> tp.Union[tp.List[int], tp.List[MutualFriends]]:\n    \"\"\"\n    Получить список идентификаторов общих друзей между парой пользователей.\n\n    :param source_uid: Идентификатор пользователя, чьи друзья пересекаются с друзьями пользователя с идентификатором target_uid.\n    :param target_uid: Идентификатор пользователя, с которым необходимо искать общих друзей.\n    :param target_uids: Cписок идентификаторов пользователей, с которыми необходимо искать общих друзей.\n    :param order: Порядок, в котором нужно вернуть список общих друзей.\n    :param count: Количество общих друзей, которое нужно вернуть.\n    :param offset: Смещение, необходимое для выборки определенного подмножества общих друзей.\n    :param progress: Callback для отображения прогресса.\n    \"\"\"\n    start = Session(VK_CONFIG[\"domain\"])\n    all_friends = []\n    if target_uids:\n        for i in range(((len(target_uids) - 1) // 100) + 1):\n            try:\n                mutual_friends = start.get(\"friends.getMutual\",\n                                           params={\"access_token\": VK_CONFIG[\"access_token\"],\n                                                   \"v\": VK_CONFIG[\"version\"],\n                                                   \"source_uid\": source_uid,\n                                                   \"target_uid\": target_uid,\n                                                   \"target_uids\": ','.join(list(map(str, target_uids))),\n                                                   \"order\": order,\n                                                   \"count\": 100,\n                                                   \"offset\": i * 100})\n                for friend in mutual_friends.json()['response']:\n                    all_friends.append(\n                        MutualFriends(id=friend['id'], common_friends=list(map(int, friend['common_friends'])),\n                                      common_count=friend['common_count']))\n            except:\n                pass\n            time.sleep(0.5)\n        return all_friends\n    try:\n        mutual_friends = start.get(\"friends.getMutual\", params={\"access_token\": VK_CONFIG[\"access_token\"],\n                                                                \"v\": VK_CONFIG[\"version\"],\n                                                                \"source_uid\": source_uid,\n                                                                \"target_uid\": target_uid,\n                                                                \"target_uids\": target_uids,\n                                                                \"order\": order,\n                                                                \"count\": count,\n                                                                \"offset\": offset})\n        all_friends.extend(mutual_friends.json()['response'])\n    except:\n        pass\n    return all_friends\n\n\nif __name__ == \"__main__\":\n    friends = get_friends(user_id=250240920).items\n    print(friends)\n    print(get_mutual(250240920, target_uids=[136475]))
+===================================================================
+diff --git a/homework07/vkapi/friends.py b/homework07/vkapi/friends.py
+--- a/homework07/vkapi/friends.py	
++++ b/homework07/vkapi/friends.py	
+@@ -1,11 +1,8 @@
+ import dataclasses
+-import math
+ import time
+ import typing as tp
+ 
+ from homework07.vkapi.config import VK_CONFIG
+-# from vkapi.exceptions import APIError
+-
+ from homework07.vkapi.session import Session
+ 
+ QueryParams = tp.Optional[tp.Dict[str, tp.Union[str, int]]]
+@@ -18,7 +15,7 @@
+ 
+ 
+ def get_friends(
+-        user_id: int, count: int = 5000, offset: int = 0, fields: tp.Optional[tp.List[str]] = None
++    user_id: int, count: int = 5000, offset: int = 0, fields: tp.Optional[tp.List[str]] = None
+ ) -> FriendsResponse:
+     """
+     Получить список идентификаторов друзей пользователя или расширенную информацию
+@@ -33,13 +30,18 @@
+     start = Session(VK_CONFIG["domain"])
+     resp = FriendsResponse(0, [0])
+     try:
+-        friends = start.get("friends.get", params={"access_token": VK_CONFIG["access_token"],
+-                                                   "v": VK_CONFIG["version"],
+-                                                   "user_id": user_id,
+-                                                   "count": count,
+-                                                   "offset": offset,
+-                                                   "fields": fields})
+-        resp = FriendsResponse(friends.json()['response']['count'], friends.json()['response']['items'])
++        friends = start.get(
++            "friends.get",
++            params={
++                "access_token": VK_CONFIG["access_token"],
++                "v": VK_CONFIG["version"],
++                "user_id": user_id,
++                "count": count,
++                "offset": offset,
++                "fields": fields,
++            },
++        )
++        resp = FriendsResponse(friends.json()["response"]["count"], friends.json()["response"]["items"])
+         print(resp)
+     except:
+         pass
+@@ -53,13 +55,13 @@
+ 
+ 
+ def get_mutual(
+-        source_uid: tp.Optional[int] = None,
+-        target_uid: tp.Optional[int] = None,
+-        target_uids: tp.Optional[tp.List[int]] = None,
+-        order: str = "",
+-        count: tp.Optional[int] = None,
+-        offset: int = 0,
+-        progress=None,
++    source_uid: tp.Optional[int] = None,
++    target_uid: tp.Optional[int] = None,
++    target_uids: tp.Optional[tp.List[int]] = None,
++    order: str = "",
++    count: tp.Optional[int] = None,
++    offset: int = 0,
++    progress=None,
+ ) -> tp.Union[tp.List[int], tp.List[MutualFriends]]:
+     """
+     Получить список идентификаторов общих друзей между парой пользователей.
+@@ -77,33 +79,46 @@
+     if target_uids:
+         for i in range(((len(target_uids) - 1) // 100) + 1):
+             try:
+-                mutual_friends = start.get("friends.getMutual",
+-                                           params={"access_token": VK_CONFIG["access_token"],
+-                                                   "v": VK_CONFIG["version"],
+-                                                   "source_uid": source_uid,
+-                                                   "target_uid": target_uid,
+-                                                   "target_uids": ','.join(list(map(str, target_uids))),
+-                                                   "order": order,
+-                                                   "count": 100,
+-                                                   "offset": i * 100})
+-                for friend in mutual_friends.json()['response']:
++                mutual_friends = start.get(
++                    "friends.getMutual",
++                    params={
++                        "access_token": VK_CONFIG["access_token"],
++                        "v": VK_CONFIG["version"],
++                        "source_uid": source_uid,
++                        "target_uid": target_uid,
++                        "target_uids": ",".join(list(map(str, target_uids))),
++                        "order": order,
++                        "count": 100,
++                        "offset": i * 100,
++                    },
++                )
++                for friend in mutual_friends.json()["response"]:
+                     all_friends.append(
+-                        MutualFriends(id=friend['id'], common_friends=list(map(int, friend['common_friends'])),
+-                                      common_count=friend['common_count']))
++                        MutualFriends(
++                            id=friend["id"],
++                            common_friends=list(map(int, friend["common_friends"])),
++                            common_count=friend["common_count"],
++                        )
++                    )
+             except:
+                 pass
+             time.sleep(0.5)
+         return all_friends
+     try:
+-        mutual_friends = start.get("friends.getMutual", params={"access_token": VK_CONFIG["access_token"],
+-                                                                "v": VK_CONFIG["version"],
+-                                                                "source_uid": source_uid,
+-                                                                "target_uid": target_uid,
+-                                                                "target_uids": target_uids,
+-                                                                "order": order,
+-                                                                "count": count,
+-                                                                "offset": offset})
+-        all_friends.extend(mutual_friends.json()['response'])
++        mutual_friends = start.get(
++            "friends.getMutual",
++            params={
++                "access_token": VK_CONFIG["access_token"],
++                "v": VK_CONFIG["version"],
++                "source_uid": source_uid,
++                "target_uid": target_uid,
++                "target_uids": target_uids,
++                "order": order,
++                "count": count,
++                "offset": offset,
++            },
++        )
++        all_friends.extend(mutual_friends.json()["response"])
+     except:
+         pass
+     return all_friends
+Index: homework07/access_token.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import argparse\nimport webbrowser\n\n\ndef get_access_token(client_id: int, scope: str) -> None:\n    assert isinstance(client_id, int), \"clinet_id must be positive integer\"\n    assert isinstance(scope, str), \"scope must be string\"\n    assert client_id > 0, \"clinet_id must be positive integer\"\n    url = f\"\"\"\\\n    https://oauth.vk.com/authorize?client_id={client_id}&\\\n    redirect_uri=https://oauth.vk.com/blank.hmtl&\\\n    scope={scope}&\\\n    &response_type=token&\\\n    display=page&\\\n    v=5.102\\\n    \"\"\".replace(\n        \" \", \"\"\n    )\n    webbrowser.open_new_tab(url)\n\n\n#\n\nif __name__ == \"__main__\":\n    parser = argparse.ArgumentParser()\n    parser.add_argument(\"client_id\", help=\"Application Id\", type=int)\n    parser.add_argument(\n        \"-s\", dest=\"scope\", help=\"Permissions bit mask\", type=str, default=\"\", required=False\n    )\n    args = parser.parse_args()\n    get_access_token(args.client_id, args.scope)\n    print()
+===================================================================
+diff --git a/homework07/access_token.py b/homework07/access_token.py
+--- a/homework07/access_token.py	
++++ b/homework07/access_token.py	
+@@ -19,8 +19,6 @@
+     webbrowser.open_new_tab(url)
+ 
+ 
+-#
+-
+ if __name__ == "__main__":
+     parser = argparse.ArgumentParser()
+     parser.add_argument("client_id", help="Application Id", type=int)
+Index: homework07/research/network.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import typing as tp\nfrom collections import defaultdict\n\nimport community as community_louvain\nimport matplotlib.pyplot as plt\nimport networkx as nx\nimport pandas as pd\n\nfrom homework07.vkapi.friends import get_friends, get_mutual\n\n\ndef ego_network(\n    user_id: tp.Optional[int] = None, friends: tp.Optional[tp.List[int]] = None\n) -> tp.List[tp.Tuple[int, int]]:\n    \"\"\"\n    Построить эгоцентричный граф друзей.\n\n    :param user_id: Идентификатор пользователя, для которого строится граф друзей.\n    :param friends: Идентификаторы друзей, между которыми устанавливаются связи.\n    \"\"\"\n    network = []\n    '''\n    user_friends = get_friends(user_id=user_id)\n    friends = friends if friends else user_friends.items\n    '''\n    connections = get_mutual(user_id, target_uids=friends)\n    for node in connections:\n        for common in node['common_friends']:\n            network.append((node['id'], common))\n    return network\n\n#print()\n\ndef plot_ego_network(net: tp.List[tp.Tuple[int, int]]) -> None:\n    graph = nx.Graph()\n    graph.add_edges_from(net)\n    layout = nx.spring_layout(graph)\n    nx.draw(graph, layout, node_size=10, node_color=\"black\", alpha=0.5)\n    plt.title(\"Ego Network\", size=15)\n    plt.show()\n\n\ndef plot_communities(net: tp.List[tp.Tuple[int, int]]) -> None:\n    graph = nx.Graph()\n    graph.add_edges_from(net)\n    layout = nx.spring_layout(graph)\n    partition = community_louvain.best_partition(graph)\n    nx.draw(graph, layout, node_size=25, node_color=list(partition.values()), alpha=0.8)\n    plt.title(\"Ego Network\", size=15)\n    plt.show()\n\n\ndef get_communities(net: tp.List[tp.Tuple[int, int]]) -> tp.Dict[int, tp.List[int]]:\n    communities = defaultdict(list)\n    graph = nx.Graph()\n    graph.add_edges_from(net)\n    partition = community_louvain.best_partition(graph)\n    for uid, cluster in partition.items():\n        communities[cluster].append(uid)\n    return communities\n\n\ndef describe_communities(\n    clusters: tp.Dict[int, tp.List[int]],\n    friends: tp.List[tp.Dict[str, tp.Any]],\n    fields: tp.Optional[tp.List[str]] = None,\n) -> pd.DataFrame:\n    if fields is None:\n        fields = [\"first_name\", \"last_name\"]\n\n    data = []\n    for cluster_n, cluster_users in clusters.items():\n        for uid in cluster_users:\n            for friend in friends:\n                if uid == friend[\"id\"]:\n                    data.append([cluster_n] + [friend.get(field) for field in fields])  # type: ignore\n                    break\n    return pd.DataFrame(data=data, columns=[\"cluster\"] + fields)\n\n\nif __name__ == \"__main__\":\n    net = ego_network(friends=[761665596, 666096932, 600715664, 8244661])\n    plot_communities(net)\n    communities = get_communities(net)\n    user_friends = get_friends(user_id=None, fields=[\"first_name\", \"last_name\"])\n    print(describe_communities(communities, user_friends.items, fields=[\"first_name\", \"last_name\"]))
+===================================================================
+diff --git a/homework07/research/network.py b/homework07/research/network.py
+--- a/homework07/research/network.py	
++++ b/homework07/research/network.py	
+@@ -9,6 +9,7 @@
+ from homework07.vkapi.friends import get_friends, get_mutual
+ 
+ 
++# Функция строит эгоцентричный граф друзей.
+ def ego_network(
+     user_id: tp.Optional[int] = None, friends: tp.Optional[tp.List[int]] = None
+ ) -> tp.List[tp.Tuple[int, int]]:
+@@ -18,69 +19,118 @@
+     :param user_id: Идентификатор пользователя, для которого строится граф друзей.
+     :param friends: Идентификаторы друзей, между которыми устанавливаются связи.
+     """
++    # Создается пустой список `network`, который будет содержать связи в графе друзей.
+     network = []
+     '''
+     user_friends = get_friends(user_id=user_id)
+     friends = friends if friends else user_friends.items
+     '''
++    # Вызывается функция `get_mutual()', которая возвращает информацию о взаимных друзьях между
++    # пользователем с идентификатором `user_id` и списком друзей `friends`.
+     connections = get_mutual(user_id, target_uids=friends)
++    print(connections)
++    # Происходит итерация по каждому узлу (другу) в списке `connections`.
+     for node in connections:
++        # Для каждого узла выполняется следующее:
++        # Происходит вложенная итерация по каждому общему другу (`common`) у текущего узла.
++        # Для каждой пары узел-общий друг создается кортеж `(node['id'], common)`, который добавляется
++        # в список `network`
+         for common in node['common_friends']:
+             network.append((node['id'], common))
++    # В конце функции возвращается список `network`, содержащий связи в эгоцентричном графе друзей.
+     return network
+ 
+-#print()
+ 
++# Функция отображает эгоцентричный граф друзей.
++# Входным аргументом функции является список связей net, представленных в виде кортежей,
++# где каждый кортеж представляет связь между двумя узлами графа.
+ def plot_ego_network(net: tp.List[tp.Tuple[int, int]]) -> None:
++    # Создается пустой граф graph с помощью nx.Graph()
+     graph = nx.Graph()
++    # С помощью метода add_edges_from добавляются связи из списка net в граф graph.
+     graph.add_edges_from(net)
++    # Создается расположение узлов графа layout, используя алгоритм расположения графа на плоскости.
+     layout = nx.spring_layout(graph)
++    # Вызывается функция nx.draw(), которая отображает граф с использованием расположения layout.
+     nx.draw(graph, layout, node_size=10, node_color="black", alpha=0.5)
+     plt.title("Ego Network", size=15)
+     plt.show()
+ 
+ 
++# Функция отображает граф с выделенными сообществами.
+ def plot_communities(net: tp.List[tp.Tuple[int, int]]) -> None:
+     graph = nx.Graph()
+     graph.add_edges_from(net)
+     layout = nx.spring_layout(graph)
++    # Используется алгоритм Лувена для выделения сообществ в графе. Результат сохраняется в переменной partition.
+     partition = community_louvain.best_partition(graph)
+     nx.draw(graph, layout, node_size=25, node_color=list(partition.values()), alpha=0.8)
+     plt.title("Ego Network", size=15)
+     plt.show()
+ 
+ 
++# Функция выделяет сообщества в графе и возвращает словарь с информацией о каждом сообществе.
++# Входным аргументом функции является список связей `net`, представленных в виде кортежей,
++# где каждый кортеж представляет связь между двумя узлами графа.
+ def get_communities(net: tp.List[tp.Tuple[int, int]]) -> tp.Dict[int, tp.List[int]]:
++    # Создается пустой словарь `communities``. Этот словарь будет содержать информацию о сообществах,
++    # где ключом будет номер сообщества, а значением будет список узлов, принадлежащих этому сообществу.
+     communities = defaultdict(list)
++    # Создается пустой граф.
+     graph = nx.Graph()
++    # С помощью метода `add_edges_from` добавляются связи из списка `net` в граф.
+     graph.add_edges_from(net)
++    # Используется алгоритм Лувена для выделения сообществ в графе. Результат сохраняется в переменной `partition`,
++    # где ключом является идентификатор узла, а значением - номер сообщества, которому он принадлежит.
+     partition = community_louvain.best_partition(graph)
++    # Происходит итерация по элементам словаря `partition`, где для каждого идентификатора
++    # узла `uid` и номера сообщества `cluster` выполняется:
+     for uid, cluster in partition.items():
++        # Добавляется идентификатор узла `uid` в список сообщества `communities[cluster]`.
+         communities[cluster].append(uid)
++    # Возвращается словарь `communities`, содержащий информацию о каждом сообществе.
++    # Ключами словаря являются номера сообществ, а значениями - списки узлов, принадлежащих этим сообществам.
+     return communities
+ 
+ 
++# Функция создает описание сообществ на основе информации о пользователях и их принадлежности к сообществам.
+ def describe_communities(
+     clusters: tp.Dict[int, tp.List[int]],
+     friends: tp.List[tp.Dict[str, tp.Any]],
+     fields: tp.Optional[tp.List[str]] = None,
+ ) -> pd.DataFrame:
++    # Проверяется, если параметр fields равен None, то ему присваивается список по умолчанию ["first_name", "last_name"]
+     if fields is None:
+         fields = ["first_name", "last_name"]
+ 
++    # Создается пустой список data, который будет содержать данные для создания DataFrame.
+     data = []
++    # Происходит итерация по элементам словаря clusters, где для каждого номера сообщества cluster_n
++    # и списка пользователей cluster_users выполняется:
+     for cluster_n, cluster_users in clusters.items():
++        # Происходит итерация по каждому идентификатору пользователя uid в списке cluster_users.
+         for uid in cluster_users:
++            # Происходит вложенная итерация по каждому словарю friend в списке friends
+             for friend in friends:
++                # Если идентификатор пользователя uid совпадает с идентификатором пользователя
++                # в словаре friend["id"], то выполняется :
+                 if uid == friend["id"]:
++                    # Создается список, содержащий номер сообщества cluster_n
++                    # и значения полей пользователя, указанных в fields. Созданный список добавляется в список data.
+                     data.append([cluster_n] + [friend.get(field) for field in fields])  # type: ignore
+                     break
++    # Возвращается DataFrame, созданный на основе списка data. Столбцы DataFrame будут
++    # называться "cluster" (для номера сообщества) и fields (поля, указанные в fields).
+     return pd.DataFrame(data=data, columns=["cluster"] + fields)
+ 
+ 
+ if __name__ == "__main__":
+-    net = ego_network(friends=[761665596, 666096932, 600715664, 8244661])
++    friends = get_friends(user_id=189183825).items
++    our_friends = get_mutual(189183825, target_uids=[561647])
++    print(our_friends)
++    net = ego_network(user_id=189183825, friends=[3380690, 4192808])
++    print(net)
++    #plot_ego_network(net)
+     plot_communities(net)
+-    communities = get_communities(net)
+-    user_friends = get_friends(user_id=None, fields=["first_name", "last_name"])
+-    print(describe_communities(communities, user_friends.items, fields=["first_name", "last_name"]))
+\ No newline at end of file
++    # user_friends = get_friends(user_id=None, fields=["first_name", "last_name"])
++    # print(describe_communities(communities, user_friends.items, fields=["first_name", "last_name"]))
+\ No newline at end of file
+Index: homework07/friends2222.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import requests\n\nfrom homework07.vkapi.config import VK_CONFIG\n\ndomain = VK_CONFIG[\"domain\"]\naccess_token = VK_CONFIG[\"access_token\"]\nv = VK_CONFIG[\"version\"]\nuser_id = 250240920\nfields = 'sex'\n\nquery = f\"{domain}/friends.get?access_token={access_token}&user_id={user_id}&fields={fields}&v={v}\"\nresponse = requests.get(query).json()\nfor i in response['response']['items']:\n    print(i)\nprint(response)
+===================================================================
+diff --git a/homework07/friends2222.py b/homework07/friends2222.py
+--- a/homework07/friends2222.py	
++++ b/homework07/friends2222.py	
+@@ -12,4 +12,5 @@
+ response = requests.get(query).json()
+ for i in response['response']['items']:
+     print(i)
+-print(response)
+\ No newline at end of file
++print(response)
++#
+\ No newline at end of file
+Index: homework07/tests/tests_api/test_session.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import time\nimport unittest\n\nimport httpretty\nimport responses\nfrom requests.exceptions import ConnectionError, HTTPError, ReadTimeout, RetryError\n\nfrom homework07.vkapi.session import Session\n\n\nclass TestSession(unittest.TestCase):\n    @httpretty.activate\n    def test_max_retries(self):\n        session = Session(\"https://example.com\", max_retries=5, backoff_factor=0)\n        httpretty.register_uri(\n            httpretty.GET,\n            \"https://example.com/\",\n            responses=[\n                httpretty.Response(\n                    body=\"\",\n                    status=500,\n                ),\n                httpretty.Response(\n                    body=\"\",\n                    status=500,\n                ),\n                httpretty.Response(\n                    body=\"\",\n                    status=500,\n                ),\n            ],\n        )\n        with self.assertRaises(RetryError):\n            _ = session.get(\"\")\n        self.assertEqual(6, len(httpretty.latest_requests()))\n\n    @httpretty.activate\n    def test_backoff_factor(self):\n        backoff_factor = 0.5\n        max_retries = 4\n        total_delay = sum(backoff_factor * (2 ** n) for n in range(1, max_retries))\n\n        session = Session(\n            \"https://example.com\",\n            max_retries=max_retries,\n            backoff_factor=backoff_factor,\n        )\n        httpretty.register_uri(\n            httpretty.GET,\n            \"https://example.com/\",\n            responses=[\n                httpretty.Response(\n                    body=\"\",\n                    status=500,\n                )\n                for _ in range(max_retries)\n            ],\n        )\n        start_time = time.time()\n        with self.assertRaises(RetryError):\n            _ = session.get(\"\")\n        end_time = time.time()\n        time_diff = end_time - start_time\n\n        self.assertAlmostEqual(time_diff, total_delay, places=0)\n        self.assertEqual(max_retries + 1, len(httpretty.latest_requests()))\n\n    @responses.activate\n    def test_raises_on_timeout_error(self):\n        responses.add(responses.GET, \"https://example.com\", body=ReadTimeout())\n        session = Session(\"https://example.com\", max_retries=1)\n        with self.assertRaises(ReadTimeout):\n            _ = session.get(\"\")\n\n    @responses.activate\n    def test_raises_on_http_error(self):\n        responses.add(responses.GET, \"https://example.com\", body=HTTPError())\n        session = Session(\"https://example.com\", max_retries=1)\n        with self.assertRaises(HTTPError):\n            _ = session.get(\"\")\n\n    @responses.activate\n    def test_raises_on_server_internal_error(self):\n        responses.add(responses.GET, \"https://example.com\", body=ConnectionError())\n        session = Session(\"https://example.com\", max_retries=1)\n        with self.assertRaises(ConnectionError):\n            _ = session.get(\"\")\n
+===================================================================
+diff --git a/homework07/tests/tests_api/test_session.py b/homework07/tests/tests_api/test_session.py
+--- a/homework07/tests/tests_api/test_session.py	
++++ b/homework07/tests/tests_api/test_session.py	
+@@ -1,10 +1,8 @@
+ import time
+ import unittest
+-
+ import httpretty
+ import responses
+ from requests.exceptions import ConnectionError, HTTPError, ReadTimeout, RetryError
+-
+ from homework07.vkapi.session import Session
+ 
+ 
+Index: homework07/vkapi/session.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import typing as tp\n\nimport requests\nfrom requests.adapters import HTTPAdapter\nfrom requests.packages.urllib3.util.retry import Retry\n\n\nclass Session:\n    \"\"\"\n    Сессия.\n\n    :param base_url: Базовый адрес, на который будут выполняться запросы.\n    :param timeout: Максимальное время ожидания ответа от сервера.\n    :param max_retries: Максимальное число повторных запросов.\n    :param backoff_factor: Коэффициент экспоненциального нарастания задержки.\n    \"\"\"\n\n    def __init__(\n        self,\n        base_url: str,\n        timeout: float = 5.0,\n        max_retries: int = 3,\n        backoff_factor: float = 0.3,\n    ) -> None:\n        self.base_url = base_url\n        self.timeout = timeout\n        self.session = requests.Session()\n        self.retry_strategy = Retry(\n            total=max_retries,\n            backoff_factor=backoff_factor,\n            allowed_methods =[\"GET\", \"POST\"],\n            status_forcelist=list(range(400, 600))\n        )\n        self.adapter = HTTPAdapter(max_retries=self.retry_strategy)\n        self.session.mount(base_url, self.adapter)\n\n    def get(self, url: str, *args: tp.Any, **kwargs: tp.Any) -> requests.Response:\n        kwargs[\"timeout\"] = kwargs[\"timeout\"] if \"timeout\" in kwargs else self.timeout\n        response = self.session.get(self.base_url + \"/\" + url, *args, **kwargs)\n        return response\n\n    def post(self, url: str, *args: tp.Any, **kwargs: tp.Any) -> requests.Response:\n        kwargs[\"timeout\"] = kwargs[\"timeout\"] if \"timeout\" in kwargs else self.timeout\n        response = self.session.post(self.base_url + \"/\" + url, *args, **kwargs)\n        return response\n\n
+===================================================================
+diff --git a/homework07/vkapi/session.py b/homework07/vkapi/session.py
+--- a/homework07/vkapi/session.py	
++++ b/homework07/vkapi/session.py	
+@@ -5,6 +5,7 @@
+ from requests.packages.urllib3.util.retry import Retry
+ 
+ 
++# класс Session представляет сессию для выполнения HTTP-запросов.
+ class Session:
+     """
+     Сессия.
+@@ -16,31 +17,53 @@
+     """
+ 
+     def __init__(
+-        self,
+-        base_url: str,
+-        timeout: float = 5.0,
+-        max_retries: int = 3,
+-        backoff_factor: float = 0.3,
++            self,
++            base_url: str,
++            timeout: float = 5.0,
++            max_retries: int = 3,
++            backoff_factor: float = 0.3,
+     ) -> None:
++        # base_url - строка, представляющая базовый URL, на который будут выполняться запросы.
++        # timeout - время ожидания ответа от сервера в секундах.
++        # session - объект requests.Session(), который предоставляет интерфейс для отправки HTTP-запросов.
++        # retry_strategy - объект Retry, определяющий стратегию повторных запросов в случае неудачных попыток.
++        # adapter - объект HTTPAdapter, настраивающий повторные запросы на основе retry_strategy.
++
++        # base_url - устанавливается базовый URL для сессии.
++        # timeout - устанавливается максимальное время ожидания ответа от сервера.
++        # session - создается объект requests.Session().
++        # retry_strategy - создается объект Retry с указанием количества повторных запросов,
++        # коэффициента задержки и списка разрешенных методов (GET и POST), а также статусных кодов,
++        # для которых будет выполнен повторный запрос (от 400 до 599).
++        # adapter - создается объект HTTPAdapter с указанием retry_strategy для настройки повторных запросов
++        # с использованием session.
+         self.base_url = base_url
+         self.timeout = timeout
+         self.session = requests.Session()
+         self.retry_strategy = Retry(
+             total=max_retries,
+             backoff_factor=backoff_factor,
+-            allowed_methods =["GET", "POST"],
++            allowed_methods=["GET", "POST"],
+             status_forcelist=list(range(400, 600))
+         )
+         self.adapter = HTTPAdapter(max_retries=self.retry_strategy)
+         self.session.mount(base_url, self.adapter)
+ 
++    # функция выполняет HTTP GET-запрос по указанному URL. # Описание параметров метода:
++    # `url` - строка, представляющая путь к ресурсу, к которому будет выполнен GET-запрос.
++    # `*args` - произвольное количество позиционных аргументов, которые могут передаваться методу `get`.
++    # `**kwargs` - произвольное количество именованных аргументов, которые могут передаваться методу `get`.
+     def get(self, url: str, *args: tp.Any, **kwargs: tp.Any) -> requests.Response:
++        # Сначала проверяется наличие аргумента "timeout" в `kwargs`. Если аргумент отсутствует,
++        # то значение `timeout` из объекта `Session` присваивается к `kwargs["timeout"]`.
+         kwargs["timeout"] = kwargs["timeout"] if "timeout" in kwargs else self.timeout
++        # Затем выполняется GET-запрос, где формируется полный URL путем конкатенации базового URL с переданным URL.
++        # Аргументы `*args` и `**kwargs` передаются в `session.get()` для дополнительной настройки запроса.
+         response = self.session.get(self.base_url + "/" + url, *args, **kwargs)
++        # Возвращается объект `requests.Response`, представляющий ответ на GET-запрос.
+         return response
+ 
+     def post(self, url: str, *args: tp.Any, **kwargs: tp.Any) -> requests.Response:
+         kwargs["timeout"] = kwargs["timeout"] if "timeout" in kwargs else self.timeout
+         response = self.session.post(self.base_url + "/" + url, *args, **kwargs)
+         return response
+-
+Index: homework07/vkapi/config.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+># https://hackernoon.com/4-ways-to-manage-the-configuration-in-python-4623049e841b\n\nVK_CONFIG = {\n    \"domain\": \"https://api.vk.com/method\",\n    \"access_token\": \"vk1.a.btZHaMV_1eIGkJzo-GnG9mZf6q9SnsHerCpVqjuDMdvhcwAvT3HPo9Ofc0lwI3qkueUmv__FGNoYNwMnbOQpS1bZXfTqhJqZilC6Zc0PpUAjtZFSvWnAFUCdQV7EAEr8-YzoH0jqwGbJ8giFPrklnIg9x15z1vVq8Pus88A8WviypWGgLdv1-K-VjmItO3D6\",\n    \"version\": \"5.126\",\n}
+===================================================================
+diff --git a/homework07/vkapi/config.py b/homework07/vkapi/config.py
+--- a/homework07/vkapi/config.py	
++++ b/homework07/vkapi/config.py	
+@@ -2,6 +2,6 @@
+ 
+ VK_CONFIG = {
+     "domain": "https://api.vk.com/method",
+-    "access_token": "vk1.a.btZHaMV_1eIGkJzo-GnG9mZf6q9SnsHerCpVqjuDMdvhcwAvT3HPo9Ofc0lwI3qkueUmv__FGNoYNwMnbOQpS1bZXfTqhJqZilC6Zc0PpUAjtZFSvWnAFUCdQV7EAEr8-YzoH0jqwGbJ8giFPrklnIg9x15z1vVq8Pus88A8WviypWGgLdv1-K-VjmItO3D6",
++    "access_token": "vk1.a.1UydWytAh2d-MZHoLWA8JrbzVV6P6OUEoHIPT29mOL7mZUDB3_PASNgCKnTxk90D8_EEpPO-cQvFuRp8oME_KV8kCAzl8JVS4u_MvwFsYIsOHkHfhbUeSHmdHW1U-Z7pDwLpQnMyaBz8-HEGimWBxopcae99r1u7cgOO_qXEl5Rv-5NGluilrKTr_BDwfQ8l",
+     "version": "5.126",
+ }
+\ No newline at end of file
