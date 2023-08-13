@@ -1,212 +1,288 @@
-import pathlib
-import typing as tp
-import random
+from copy import deepcopy
+from random import choice, randint
+from typing import List, Optional, Tuple, Union
 
-T = tp.TypeVar("T")
-
-
-def read_sudoku(path: tp.Union[str, pathlib.Path]) -> tp.List[tp.List[str]]:
-    """ Прочитать Судоку из указанного файла """
-    path = pathlib.Path(path)
-    with path.open() as f:
-        puzzle = f.read()
-    return create_grid(puzzle)
+import pandas as pd
 
 
-def create_grid(puzzle: str) -> tp.List[tp.List[str]]:
-    digits = [c for c in puzzle if c in "123456789."]
-    return group(digits, 9)
+def create_grid(rows: int = 15, cols: int = 15) -> List[List[Union[str, int]]]:
+    return [["■"] * cols for _ in range(rows)]
 
 
-def display(grid: tp.List[tp.List[str]]) -> None:
-    """Вывод Судоку """
-    width = 2
-    line = "+".join(["-" * (width * 3)] * 3)
-    for row in range(9):
-        print(
-            "".join(
-                grid[row][col].center(width) + ("|" if str(col) in "25" else "") for col in range(9)
-            )
-        )
-        if str(row) in "25":
-            print(line)
-    print()
-
-
-def group(values: tp.List[T], n: int) -> tp.List[tp.List[T]]:
+def remove_wall(
+    grid: List[List[Union[str, int]]], coord: Tuple[int, int]
+) -> List[List[Union[str, int]]]:
     """
-    Сгруппировать значения values в список, состоящий из списков по n элементов
-    >>> group([1,2,3,4], 2)
-    [[1, 2], [3, 4]]
-    >>> group([1,2,3,4,5,6,7,8,9], 3)
-    [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+
+    :param grid:
+    :param coord:
+    :return:
     """
-    # Создаетcя новый список, в котором каждый элемент
-    # списка является результатом некоторой операции,
-    # примененной к каждому элементу
-    return [values[idx: idx + n] for idx in range(0, len(values), n)]
-    # срез массива
 
-
-def get_row(grid: tp.List[tp.List[str]], pos: tp.Tuple[int, int]) -> tp.List[str]:
-    """Возвращает все значения для номера строки, указанной в pos
-    >>> get_row([['1', '2', '.'], ['4', '5', '6'], ['7', '8', '9']], (0, 0))
-    ['1', '2', '.']
-    >>> get_row([['1', '2', '3'], ['4', '.', '6'], ['7', '8', '9']], (1, 0))
-    ['4', '.', '6']
-    >>> get_row([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']], (2, 0))
-    ['.', '8', '9']
-    """
-    return grid[pos[0]]
-
-
-def get_col(grid: tp.List[tp.List[str]], pos: tp.Tuple[int, int]) -> tp.List[str]:
-    """Возвращает все значения для номера столбца, указанного в pos
-    >>> get_col([['1', '2', '.'], ['4', '5', '6'], ['7', '8', '9']], (0, 0))
-    ['1', '4', '7']
-    >>> get_col([['1', '2', '3'], ['4', '.', '6'], ['7', '8', '9']], (0, 1))
-    ['2', '.', '8']
-    >>> get_col([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']], (0, 2))
-    ['3', '6', '9']
-    """
-    return [grid[i][pos[1]] for i in range(len(grid))]
-
-
-def get_block(grid: tp.List[tp.List[str]], pos: tp.Tuple[int, int]) -> tp.List[str]:
-    """Возвращает все значения из квадрата, в который попадает позиция pos
-    >>> grid = read_sudoku('puzzle1.txt')
-    >>> get_block(grid, (0, 1))
-    ['5', '3', '.', '6', '.', '.', '.', '9', '8']
-    >>> get_block(grid, (4, 7))
-    ['.', '.', '3', '.', '.', '1', '.', '.', '6']
-    >>> get_block(grid, (8, 8))
-    ['2', '8', '.', '.', '.', '5', '.', '7', '9']
-    """
-    row = pos[0] // 3 * 3
-    col = pos[1] // 3 * 3
-    # Возвращает все значения из квадрата,
-    # в который попадает позиция pos (всего 9 квадратов размером 3*3).
-    return [grid[row][column] for row in range(row, row + 3) for column in range(col, col + 3)]
-
-
-def find_empty_positions(grid: tp.List[tp.List[str]]) -> tp.Optional[tp.Tuple[int, int]]:
-    """Найти первую свободную позицию в пазле
-    >>> find_empty_positions([['1', '2', '.'], ['4', '5', '6'], ['7', '8', '9']])
-    (0, 2)
-    >>> find_empty_positions([['1', '2', '3'], ['4', '.', '6'], ['7', '8', '9']])
-    (1, 1)
-    >>> find_empty_positions([['1', '2', '3'], ['4', '5', '6'], ['.', '8', '9']])
-    (2, 0)
-    """
-    for row in range(len(grid)):
-        for col in range(len(grid)):
-            if grid[row][col] == ".":
-                # возвращает первую попавшуюся свободную позицию
-                return row, col
-    return None
-
-
-def find_possible_values(grid: tp.List[tp.List[str]], pos: tp.Tuple[int, int]) -> tp.Set[str]:
-    """Вернуть множество возможных значения для указанной позиции
-    >>> grid = read_sudoku('puzzle1.txt')
-    >>> values = find_possible_values(grid, (0,2))
-    >>> values == {'1', '2', '4'}
-    True
-    >>> values = find_possible_values(grid, (4,7))
-    >>> values == {'2', '5', '9'}
-    True
-    """
-    # значения, которые на эту позицию можно поставить
-    return (
-            set("123456789")
-            - set(get_row(grid, pos))
-            - set(get_col(grid, pos))
-            - set(get_block(grid, pos))
-    )
-
-
-def solve(grid: tp.List[tp.List[str]]) -> tp.Optional[tp.List[tp.List[str]]]:
-    """ Решение пазла, заданного в grid """
-    """ Как решать Судоку?
-        1. Найти свободную позицию
-        2. Найти все возможные значения, которые могут находиться на этой позиции
-        3. Для каждого возможного значения:
-            3.1. Поместить это значение на эту позицию
-            3.2. Продолжить решать оставшуюся часть пазла
-    >>> grid = read_sudoku('puzzle1.txt')
-    >>> solve(grid)
-    [['5', '3', '4', '6', '7', '8', '9', '1', '2'], ['6', '7', '2', '1', '9', '5', '3', '4', '8'], ['1', '9', '8', '3', '4', '2', '5', '6', '7'], ['8', '5', '9', '7', '6', '1', '4', '2', '3'], ['4', '2', '6', '8', '5', '3', '7', '9', '1'], ['7', '1', '3', '9', '2', '4', '8', '5', '6'], ['9', '6', '1', '5', '3', '7', '2', '8', '4'], ['2', '8', '7', '4', '1', '9', '6', '3', '5'], ['3', '4', '5', '2', '8', '6', '1', '7', '9']]
-    """
-    if pos := find_empty_positions(grid):
-        values = find_possible_values(grid, pos)
-        if len(values) > 0:
-            for value in values:
-                grid[pos[0]][pos[1]] = value
-                result = solve(grid)
-                if result is not None:
-                    return result
-                else:
-                    grid[pos[0]][pos[1]] = "."
-        return None
+    if grid[coord[0]][coord[1]] != " ":
+        grid[coord[0]][coord[1]] = " "
+    elif coord[1] + 1 < len(grid[0]) - 1:
+        grid[coord[0]][coord[1] + 1] = " "
+    elif coord[0] - 1 > 1:
+        grid[coord[0] - 1][coord[1]] = " "
     return grid
 
 
-def check_solution(solution: tp.List[tp.List[str]]) -> bool:
-    """ Если решение solution верно, то вернуть True, в противном случае False """
-    # TODO: Add doctests with bad puzzles
-    # Решение оказывается верным, если ни в одной строке,
-    # ни в одном столбце, ни в квадрате не повторяются значения
-    for row in range(len(solution)):
-        if set(get_row(solution, (row, 0))) != set("123456789"):
-            return False
-    for col in range(len(solution)):
-        if set(get_col(solution, (0, col))) != set("123456789"):
-            return False
-    for row in range(len(solution), 3):
-        for col in range(len(solution), 3):
-            if set(get_block(solution, (row, col))) != set("123456789"):
-                return False
-    return True
-
-
-def generate_sudoku(N: int) -> tp.List[tp.List[str]]:
-    """Генерация судоку заполненного на N элементов
-    >>> grid = generate_sudoku(40)
-    >>> sum(1 for row in grid for e in row if e == '.')
-    41
-    >>> solution = solve(grid)
-    >>> check_solution(solution)
-    True
-    >>> grid = generate_sudoku(1000)
-    >>> sum(1 for row in grid for e in row if e == '.')
-    0
-    >>> solution = solve(grid)
-    >>> check_solution(solution)
-    True
-    >>> grid = generate_sudoku(0)
-    >>> sum(1 for row in grid for e in row if e == '.')
-    81
-    >>> solution = solve(grid)
-    >>> check_solution(solution)
-    True
+def bin_tree_maze(
+    rows: int = 15, cols: int = 15, random_exit: bool = True
+) -> List[List[Union[str, int]]]:
     """
-    empty_grid = [["."] * 9 for _ in range(9)]
-    grid = solve(empty_grid)
-    count = 81 - N
-    while count > 0:
-        x = random.randint(0, 8)
-        y = random.randint(0, 8)
-        if grid and grid[x][y] != ".":
-            grid[x][y] = "."
-            count -= 1
+
+    :param rows:
+    :param cols:
+    :param random_exit:
+    :return:
+    """
+
+    grid = create_grid(rows, cols)
+    empty_cells = []
+    for x, row in enumerate(grid):
+        for y, _ in enumerate(row):
+            if x % 2 == 1 and y % 2 == 1:
+                grid[x][y] = " "
+                empty_cells.append((x, y))
+
+    # 1. выбрать любую клетку
+    # 2. выбрать направление: наверх или направо.
+    # Если в выбранном направлении следующая клетка лежит за границами поля,
+    # выбрать второе возможное направление
+    # 3. перейти в следующую клетку, сносим между клетками стену
+    # 4. повторять 2-3 до тех пор, пока не будут пройдены все клетки
+
+    # генерация входа и выхода
+    random_action = [-1, 1]
+    for row_cor in range(1, rows - 1, 2):
+        for col_cor in range(1, cols - 1, 2):
+            action = choice(random_action)
+            if action == 1:
+                if row_cor == 1:
+                    if col_cor + 1 == cols - 1:
+                        continue
+                    remove_wall(grid, (row_cor, col_cor + 1))
+                elif col_cor + 1 < cols - 1:
+                    remove_wall(grid, (row_cor, col_cor + 1))
+                elif col_cor - 1 <= cols - 1:
+                    remove_wall(grid, (row_cor - 1, col_cor))
+            else:
+                if row_cor == 1:
+                    if col_cor + 1 == cols - 1:
+                        continue
+                    remove_wall(grid, (row_cor, col_cor + 1))
+                elif row_cor + 1 <= rows - 1:
+                    remove_wall(grid, (row_cor - 1, col_cor))
+
+    if random_exit:
+        x_in, x_out = randint(0, rows - 1), randint(0, rows - 1)
+        y_in = randint(0, cols - 1) if x_in in (0, rows - 1) else choice((0, cols - 1))
+        y_out = randint(0, cols - 1) if x_out in (0, rows - 1) else choice((0, cols - 1))
+    else:
+        x_in, y_in = 0, cols - 2
+        x_out, y_out = rows - 1, 1
+
+    grid[x_in][y_in], grid[x_out][y_out] = "X", "X"
+
+    return grid
+
+
+def get_exits(grid: List[List[Union[str, int]]]) -> List[Tuple[int, int]]:
+    """
+
+    :param grid:
+    :return:
+    """
+
+    ans = []
+    rows = len(grid) - 1
+    columns = len(grid[0]) - 1
+
+    for i in range(columns):
+        if grid[0][i] == "X":
+            ans.append((0, i))
+    for i in range(rows):
+        if grid[i][0] == "X":
+            ans.append((i, 0))
+
+    if len(ans) != 2:
+        for i in range(columns):
+            if grid[rows][i] == "X":
+                ans.append((rows, i))
+        for i in range(rows):
+            if grid[i][columns] == "X":
+                ans.append((i, columns))
+    if len(ans) > 1:
+        if ans[0][1] > ans[1][1]:
+            ans[0], ans[1] = ans[1], ans[0]
+        if ans[0][0] > ans[1][0]:
+            ans[0], ans[1] = ans[1], ans[0]
+
+    return ans
+
+
+def make_step(grid: List[List[Union[str, int]]], k: int) -> List[List[Union[str, int]]]:
+    """
+
+    :param grid:
+    :param k:
+    :return:
+    """
+
+    moves = [[0, 1], [0, -1], [1, 0], [-1, 0]]
+    to_visit = []
+
+    for i in range(len(grid)):
+        for j in range(len(grid[0])):
+            if grid[i][j] == k:
+                to_visit.append((i, j, k + 1))
+    while to_visit != []:
+        i, j = to_visit[0][0], to_visit[0][1]
+        for x, y in moves:
+            if 0 <= i + x < len(grid) and 0 <= j + y < len(grid[0]):
+                if grid[i + x][j + y] == 0:
+                    grid[i + x][j + y] = to_visit[0][2]
+        to_visit.pop(0)
+    return grid
+
+
+def shortest_path(
+    grid: List[List[Union[str, int]]], exit_coord: Tuple[int, int]
+) -> Optional[Union[Tuple[int, int], List[Tuple[int, int]]]]:
+    """
+
+    :param grid:
+    :param exit_coord:
+    :return:
+    """
+    x = exit_coord[0]
+    y = exit_coord[1]
+    k = grid[x][y]
+    moves = [[0, 1], [0, -1], [1, 0], [-1, 0]]
+    way = []
+    way.append((x, y))
+    while k != 1:
+        for a, b in moves:
+            if 0 <= x + a < len(grid) and 0 <= y + b < len(grid[0]):
+                temp = grid[x + a][y + b]
+                if isinstance(temp, int):
+                    if temp < int(k):
+                        x, y = x + a, y + b
+                        way.append((x, y))
+                        k = grid[x][y]
+
+    for i in range(len(grid) - 1):
+        for j in range(len(grid[0])):
+            if grid[i][j] != "■":
+                grid[i][j] = " "
+
+    return way
+
+
+def encircled_exit(grid: List[List[Union[str, int]]], coord: Tuple[int, int]) -> bool:
+    """
+
+    :param grid:
+    :param coord:
+    :return:
+    """
+
+    ans = False
+
+    if (
+            coord == (0, 0)
+            or coord == (len(grid) - 1, len(grid[0]) - 1)
+            or coord == (len(grid) - 1, 0)
+            or coord == (0, len(grid[0]) - 1)
+    ):
+        ans = True
+    elif coord[0] == 0:
+        if grid[1][coord[1]] != " ":
+            ans = True
+
+    elif coord[1] == 0:
+        if grid[coord[0]][1] != " ":
+            ans = True
+
+    elif coord[0] == len(grid) - 1:
+        if grid[len(grid) - 2][coord[1]] != " ":
+            ans = True
+
+    elif coord[1] == len(grid[0]) - 1:
+        if grid[coord[0]][len(grid[0]) - 2] != " ":
+            ans = True
+    return ans
+
+
+def solve_maze(
+    grid: List[List[Union[str, int]]],
+) -> Tuple[List[List[Union[str, int]]], Optional[Union[Tuple[int, int], List[Tuple[int, int]]]]]:
+    """
+
+    :param grid:
+    :return:
+    """
+
+    exits = get_exits(grid)
+    if len(exits) < 2:
+        return grid, exits[0]
+    else:
+        for exit in exits:
+            if encircled_exit(grid, exit):
+                return None, None
+    enter = exits[0]
+    exit = exits[1]
+    if exit[1] - enter[1] == 1 and exit[0] - enter[0] == 0:
+        return grid, exits[::-1]
+    elif exit[1] - enter[1] == 0 and exit[0] - enter[0] == 1:
+        return grid, exits[::-1]
+    elif exit[0] - enter[0] == 0 and exit[1] - enter[1] == 1:
+        return grid, exits[::-1]
+    elif exit[0] - enter[0] == 1 and exit[1] - enter[1] == 0:
+        return grid, exits[::-1]
+
+    grid[exits[0][0]][exits[0][1]] = 1
+    for i in range(len(grid)):
+        for j in range(len(grid[0])):
+            if grid[i][j] == " ":
+                grid[i][j] = 0
+            elif grid[i][j] == "X":
+                grid[i][j] = 0
+
+    k = 1
+    while grid[exits[1][0]][exits[1][1]] == 0:
+        grid = make_step(grid, k)
+        k += 1
+
+    path = shortest_path(grid, exits[1])
+
+    return grid, path
+
+
+def add_path_to_grid(
+    grid: List[List[Union[str, int]]], path: Optional[Union[Tuple[int, int], List[Tuple[int, int]]]]
+) -> List[List[Union[str, int]]]:
+    """
+
+    :param grid:
+    :param path:
+    :return:
+    """
+
+    if path:
+        for i, row in enumerate(grid):
+            for j, _ in enumerate(row):
+                if (i, j) in path:
+                    grid[i][j] = "X"
     return grid
 
 
 if __name__ == "__main__":
-    for fname in ["puzzle1.txt", "puzzle2.txt", "puzzle3.txt"]:
-        grid = read_sudoku(fname)
-        display(grid)
-        if solution := solve(grid):
-            display(solution)
-        else:
-            print(f"Puzzle {fname} can't be solved")
+    print(pd.DataFrame(bin_tree_maze(15, 15)))
+    GRID = bin_tree_maze(15, 15)
+    print(pd.DataFrame(GRID))
+    _, PATH = solve_maze(GRID)
+    MAZE = add_path_to_grid(GRID, PATH)
+    print(pd.DataFrame(MAZE))
