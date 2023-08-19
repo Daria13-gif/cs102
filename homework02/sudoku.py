@@ -240,4 +240,3 @@ class SudokuTestCase(unittest.TestCase):
         solution = sudoku.solve(grid)
         solved = sudoku.check_solution(solution)
         self.assertTrue(solved)
-        
