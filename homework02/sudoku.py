@@ -182,7 +182,7 @@ class SudokuTestCase(unittest.TestCase):
             ["2", "8", "7", "4", "1", "9", "6", "3", "5"],
             ["3", "4", "5", "2", "8", "6", "1", "7", "9"],
         ]
-        self.assertTrue(sudoku.check_solution(good_solution))
+        self.assertTrue(sudoku.test_check_solution(good_solution))
 
         not_solved = [
             ["5", "3", "4", "6", "7", "8", "9", "1", "2"],
@@ -195,7 +195,7 @@ class SudokuTestCase(unittest.TestCase):
             ["2", "8", "7", "4", "1", "9", "6", "3", "5"],
             ["3", "4", "5", "2", "8", "6", "1", "7", "."],
         ]
-        self.assertFalse(sudoku.check_solution(not_solved))
+        self.assertFalse(sudoku.test_check_solution(not_solved))
 
         bad_solution = [
             ["6", "6", "1", "1", "1", "5", "8", "3", "7"],
@@ -208,13 +208,13 @@ class SudokuTestCase(unittest.TestCase):
             ["8", "1", "5", "4", "7", "9", "2", "6", "3"],
             ["7", "2", "3", "6", "5", "1", "9", "8", "4"],
         ]
-        self.assertFalse(sudoku.check_solution(bad_solution))
+        self.assertFalse(sudoku.test_check_solution(bad_solution))
 
         bad_solution = [[str(v) for v in range(1, 10)]] * 9
-        self.assertFalse(sudoku.check_solution(bad_solution))
+        self.assertFalse(sudoku.test_check_solution(bad_solution))
 
         bad_solution = [[str(v)] * 9 for v in range(1, 10)]
-        self.assertFalse(sudoku.check_solution(bad_solution))
+        self.assertFalse(sudoku.test_check_solution(bad_solution))
 
     def test_generate_sudoku(self):
         grid = sudoku.generate_sudoku(40)
@@ -222,7 +222,7 @@ class SudokuTestCase(unittest.TestCase):
         actual_unknown = sum(1 for row in grid for e in row if e == ".")
         self.assertEqual(expected_unknown, actual_unknown)
         solution = sudoku.solve(grid)
-        solved = sudoku.check_solution(solution)
+        solved = sudoku.test_check_solution(solution)
         self.assertTrue(solved)
 
         grid = sudoku.generate_sudoku(1000)
@@ -230,7 +230,7 @@ class SudokuTestCase(unittest.TestCase):
         actual_unknown = sum(1 for row in grid for e in row if e == ".")
         self.assertEqual(expected_unknown, actual_unknown)
         solution = sudoku.solve(grid)
-        solved = sudoku.check_solution(solution)
+        solved = sudoku.test_check_solution(solution)
         self.assertTrue(solved)
 
         grid = sudoku.generate_sudoku(0)
@@ -238,5 +238,5 @@ class SudokuTestCase(unittest.TestCase):
         actual_unknown = sum(1 for row in grid for e in row if e == ".")
         self.assertEqual(expected_unknown, actual_unknown)
         solution = sudoku.solve(grid)
-        solved = sudoku.check_solution(solution)
+        solved = sudoku.test_check_solution(solution)
         self.assertTrue(solved)
