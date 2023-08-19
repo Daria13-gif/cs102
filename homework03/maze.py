@@ -227,7 +227,7 @@ def solve_maze(
     else:
         for exit in exits:
             if encircled_exit(grid, exit):
-                return None, None
+                return None, None  # type: ignore
     enter = exits[0]
     exit = exits[1]
     if exit[1] - enter[1] == 1 and exit[0] - enter[0] == 0:
