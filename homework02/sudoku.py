@@ -148,7 +148,6 @@ def find_possible_values(grid: tp.List[tp.List[str]], pos: tp.Tuple[int, int]) -
 
 
 def solve(grid: tp.List[tp.List[str]]) -> tp.List[tp.List[str]]:
-
     """Поиск решения для указанного пазла.
 
     Как решать Судоку?
@@ -203,7 +202,6 @@ def check_solution(solution: tp.List[tp.List[str]]) -> bool:
 
 
 def generate_sudoku(N: int) -> tp.List[tp.List[str]]:
-
     """Генерация судоку заполненного на N элементов
     >>> grid = generate_sudoku(40)
     >>> sum(1 for row in grid for e in row if e == '.')
