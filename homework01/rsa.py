@@ -2,6 +2,7 @@ import random
 import typing as tp
 
 
+# функция проверяет, является ли заданное число n простым числом
 def is_prime(n: int) -> bool:
     """
     Tests to see if a number is prime.
@@ -12,10 +13,21 @@ def is_prime(n: int) -> bool:
     >>> is_prime(8)
     False
     """
-    # PUT YOUR CODE HERE
+    # Если число n меньше 2, функция сразу возвращает False, так как простые числа начинаются с 2
+    if n < 2:
+        return False
+    # перебираем числа от 2 до целой части квадратного корня из n плюс 1.
+    # шаг равен 2, так как четные числа больше 2 не могут быть простыми.
+    for i in range(2, int(n**0.5) + 1, 2):
+        # проверяем, делится ли число n на i без остатка.
+        # Если делится без остатка, то n не является простым числом.
+        if n % i == 0:
+            return False
+    return True
     pass
 
 
+# алгоритм Евклида для нахождения наибольшего общего делителя двух заданных целых чисел a и b.
 def gcd(a: int, b: int) -> int:
     """
     Euclid's algorithm for determining the greatest common divisor.
@@ -24,10 +36,21 @@ def gcd(a: int, b: int) -> int:
     >>> gcd(3, 7)
     1
     """
-    # PUT YOUR CODE HERE
+    # если b равно 0, то функция возвращает абсолютное значение a.
+    # Это происходит потому, что наибольший общий делитель числа a и 0 равен самому числу a, и функция не может делить на 0.
+    if b == 0:
+        return abs(a)
+    # В противном случае функция вызывает саму себя рекурсивно,
+    # передавая в качестве аргументов b и остаток от деления a на b (выражение a % b).
+    # Это делается для того, чтобы продолжать вызывать функцию gcd с новыми значениями a и b,
+    # пока b не станет равным 0. Когда b станет равным 0, функция вернет абсолютное значение a, которое будет наибольшим общим делителем исходных чисел a и b.
+    else:
+        return gcd(b, a % b)
     pass
 
 
+# расширенный алгоритм Евклида для нахождения мультипликативного обратного элемента
+# двух заданных целых чисел e и phi
 def multiplicative_inverse(e: int, phi: int) -> int:
     """
     Euclid's extended algorithm for finding the multiplicative
@@ -35,55 +58,94 @@ def multiplicative_inverse(e: int, phi: int) -> int:
     >>> multiplicative_inverse(7, 40)
     23
     """
-    # PUT YOUR CODE HERE
+    # пустой список lst, который будет использоваться для хранения промежуточных значений при вычислении мультипликативного обратного элемента.
+    lst = []
+    # создаются переменные no1 и no2 с значениями phi и e соответственно.
+    no1 = phi
+    no2 = e
+    while no1 % no2 != 0:
+        # текущее значение no1 делится на no2, и результат добавляется в список lst.
+        # Затем значения no1 и no2 обновляются, чтобы продолжить цикл
+        lst.append(no1 // no2)
+        no1, no2 = no2, no1 % no2
+    x = 0
+    y = 1
+    # Вычисляется длина списка lst
+    length_lst = len(lst)
+    for i in range(len(lst)):
+        # Внутри цикла x и y обновляются согласно расширенному алгоритму Евклида.
+        x, y = y, x - y * lst[length_lst - 1 - i]
+    # возвращается значение y % phi. Это значение будет мультипликативным обратным элементом e по модулю phi.
+    return y % phi
     pass
 
 
+# генерации пары ключей: публичного и приватного ключей для алгоритма шифрования RSA.
 def generate_keypair(p: int, q: int) -> tp.Tuple[tp.Tuple[int, int], tp.Tuple[int, int]]:
+    # Проверяется, что оба числа `p` и `q`, переданные в функцию, являются простыми числами.
+    # Если хотя бы одно из них не является простым, вызывается исключение `ValueError`.
     if not (is_prime(p) and is_prime(q)):
         raise ValueError("Both numbers must be prime.")
+    # Проверяется, что `p` и `q` не равны друг другу,
+    # так как в RSA они должны быть разными простыми числами.
     elif p == q:
         raise ValueError("p and q cannot be equal")
 
-    # n = pq
-    # PUT YOUR CODE HERE
+    # Вычисляется произведение `n` двух простых чисел `p` и `q`. Это будет модуль для обоих ключей.
+    n = p * q
+    # Вычисляется значение функции Эйлера "phi(n)" как произведение "(p - 1)" и "(q - 1)"
+    phi = (p - 1) * (q - 1)
 
-    # phi = (p-1)(q-1)
-    # PUT YOUR CODE HERE
-
-    # Choose an integer e such that e and phi(n) are coprime
+    # Генерируется случайное целое число "e" в диапазоне от 1 до "phi(n".
+    # Это число будет использоваться в качестве открытого ключа.
     e = random.randrange(1, phi)
 
-    # Use Euclid's Algorithm to verify that e and phi(n) are coprime
+    # Производится проверка на взаимную простоту "e" и "phi(n)" с использованием алгоритма Евклида.
+    # Если они не взаимно просты (т.е., их наибольший общий делитель не равен 1),
+    # то генерируется новое случайное "e" и проверка повторяется, пока не будет найдено
+    # подходящее значение
     g = gcd(e, phi)
     while g != 1:
         e = random.randrange(1, phi)
         g = gcd(e, phi)
 
-    # Use Extended Euclid's Algorithm to generate the private key
+    # Используя расширенный алгоритм Евклида, вычисляется число "d",
+    # которое будет частью закрытого ключа. "d" является мультипликативно обратным
+    # к "e" по модулю "phi(n)".
     d = multiplicative_inverse(e, phi)
 
-    # Return public and private keypair
-    # Public key is (e, n) and private key is (d, n)
+    # функция возвращает две пары значений: открытый ключ "(e, n)" и закрытый ключ "(d, n)".
     return ((e, n), (d, n))
 
 
+# функция реализует шифрование текстовой строки с использованием открытого ключа RSA.
+# pk - это кортеж из двух целых чисел, представляющих открытый ключ RSA.
+# функция принимает этот ключ в качестве аргумента.
 def encrypt(pk: tp.Tuple[int, int], plaintext: str) -> tp.List[int]:
-    # Unpack the key into it's components
+    # код распаковывает открытый ключ на его компоненты: "key" и "n".
+    # "key" представляет собой значение экспоненты открытого ключа, а `n` - модуль,
+    # который был использован при генерации ключей.
     key, n = pk
-    # Convert each letter in the plaintext to numbers based on
-    # the character using a^b mod m
+    # каждый символ из входной строки "plaintext" преобразуется в числовое значение,
+    # используя формулу a^b mod m, где a - это числовое значение символа,
+    # b - значение экспоненты открытого ключа, а m - модуль n.
     cipher = [(ord(char) ** key) % n for char in plaintext]
-    # Return the array of bytes
+    # функция возвращает список cipher, который представляет зашифрованный текст в числовой форме.
     return cipher
 
 
+# функция реализует операцию расшифрования зашифрованного текста с использованием закрытого ключа RSA.
 def decrypt(pk: tp.Tuple[int, int], ciphertext: tp.List[int]) -> str:
-    # Unpack the key into its components
+    # код распаковывает закрытый ключ на его компоненты: key и n.
+    # key представляет собой значение экспоненты закрытого ключа,
+    # а n - модуль, который был использован при генерации ключей.
     key, n = pk
-    # Generate the plaintext based on the ciphertext and key using a^b mod m
-    plain = [chr((char ** key) % n) for char in ciphertext]
-    # Return the array of bytes as a string
+    # происходит операция расшифрования каждого числового значения из списка ciphertext
+    # с использованием формулы a^b mod m, где a - это числовое значение,
+    # b - значение экспоненты закрытого ключа, а m - модуль n.
+    plain = [chr((char**key) % n) for char in ciphertext]
+    # функция объединяет символы из списка plain в строку с помощью метода
+    # join и возвращает расшифрованный текст как строку
     return "".join(plain)
 
 

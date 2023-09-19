@@ -1,6 +1,8 @@
+import copy
 import pathlib
-import random
 import typing as tp
+from pprint import pprint
+from random import randint
 
 import pygame
 from pygame.locals import *
@@ -18,7 +20,12 @@ class GameOfLife:
         max_generations: tp.Optional[float] = float("inf"),
     ) -> None:
         # Размер клеточного поля
-        self.rows, self.cols = size
+        self.rows, self.cols = size[0], size[1]
+
+        # Вычисляем количество ячеек по вертикали и горизонтали
+        self.cell_width = self.cols
+        self.cell_height = self.rows
+
         # Предыдущее поколение клеток
         self.prev_generation = self.create_grid()
         # Текущее поколение клеток
@@ -29,46 +36,125 @@ class GameOfLife:
         self.generations = 1
 
     def create_grid(self, randomize: bool = False) -> Grid:
-        # Copy from previous assignment
-        pass
+        if randomize:  # если значение записываем рандомно, то возвращаем список со значениями в каждой ячейке 0 или 1
+            return [[randint(0, 1) for _ in range(self.cell_width)] for __ in range(self.cell_height)]
+        else:  # если не рандомно, то возвращаем список из нулей
+            return [[0 for _ in range(self.cell_width)] for __ in range(self.cell_height)]
 
     def get_neighbours(self, cell: Cell) -> Cells:
-        # Copy from previous assignment
-        pass
+        # находим все соседние клетки + проверяем не ушли ли мы за границы поля
+        list_neighbours = []
+        # print(self.cell_width)
+        # print(self.cell_height)
+        if cell[0] - 1 >= 0 and cell[1] - 1 >= 0:
+            # print(1, cell[0] - 1, cell[1] - 1)
+            list_neighbours.append(self.curr_generation[cell[0] - 1][cell[1] - 1])
+        if cell[0] - 1 >= 0:
+            # print(2, cell[0] - 1, cell[1])
+            list_neighbours.append(self.curr_generation[cell[0] - 1][cell[1]])
+        if cell[0] - 1 >= 0 and cell[1] + 1 < self.cell_width:
+            # print(3, cell[0] - 1, cell[1] + 1)
+            list_neighbours.append(self.curr_generation[cell[0] - 1][cell[1] + 1])
+        if cell[1] + 1 < self.cell_width:
+            # print(4, cell[0], cell[1] + 1)
+            list_neighbours.append(self.curr_generation[cell[0]][cell[1] + 1])
+        if cell[1] - 1 >= 0:
+            # print(5, cell[0], cell[1] - 1)
+            list_neighbours.append(self.curr_generation[cell[0]][cell[1] - 1])
+        if cell[0] + 1 < self.cell_height and cell[1] - 1 >= 0:
+            # print(6, cell[0] + 1, cell[1] - 1)
+            list_neighbours.append(self.curr_generation[cell[0] + 1][cell[1] - 1])
+        if cell[0] + 1 < self.cell_height and cell[1] + 1 < self.cell_width:
+            # print(7, cell[0] + 1, cell[1] + 1)
+            list_neighbours.append(self.curr_generation[cell[0] + 1][cell[1] + 1])
+        if cell[0] + 1 < self.cell_height:
+            # print(8, cell[0] + 1, cell[1])
+            list_neighbours.append(self.curr_generation[cell[0] + 1][cell[1]])
+        return list_neighbours
 
     def get_next_generation(self) -> Grid:
-        # Copy from previous assignment
-        pass
+        # создаем новое поле из 0
+        new_grid = [[0 for _ in range(self.cell_width)] for __ in range(self.cell_height)]
+        # обходим все клетки поля
+        for i in range(self.cell_height):
+            for j in range(self.cell_width):
+                # получаем соседей заданной клетки
+                list_cells = self.get_neighbours((i, j))
+                # print(list_cells)
+                k = sum(list_cells)
+                # обходим соседий и  смотрим является ли сосед живым
+
+                # если соседей 2 и существо живое или 3, то клетка выживает
+                if (k == 2 and self.curr_generation[i][j] == 1) or k == 3:
+                    new_grid[i][j] = 1
+        return new_grid
+    # print
 
     def step(self) -> None:
         """
         Выполнить один шаг игры.
         """
-        pass
+        # количество поколений увеличиваем на 1
+        self.generations += 1
+        # в предыдущее поколение записываем нынешнее поколение, а в нынешнее поколение след. поколение
+        self.prev_generation, self.curr_generation = copy.deepcopy(self.curr_generation), self.get_next_generation()
 
     @property
     def is_max_generations_exceeded(self) -> bool:
         """
         Не превысило ли текущее число поколений максимально допустимое.
         """
-        pass
+        if self.max_generations is None:
+            return False
+        if self.generations >= self.max_generations:
+            return True
+        else:
+            return False
 
     @property
     def is_changing(self) -> bool:
         """
         Изменилось ли состояние клеток с предыдущего шага.
         """
-        pass
+        if self.curr_generation == self.prev_generation:
+            return False
+        else:
+            return True
 
     @staticmethod
     def from_file(filename: pathlib.Path) -> "GameOfLife":
         """
         Прочитать состояние клеток из указанного файла.
         """
-        pass
+        file = open(filename)
+        f = file.read().split("\n")
+        file.close()
+        curr_generation = []
+        for i in f:
+            a = []
+            for j in i:  # идем посторочно и разбиваем нашу строчку на
+                # элементы, превращая их в числа
+                a.append(int(j))
+            curr_generation.append(a)
+        s = GameOfLife((len(curr_generation), len(curr_generation[0])))  # создаем объект класса с кол-вом строк и
+        # кол-вом столбцов
+        s.curr_generation = copy.deepcopy(curr_generation)  # занчение из файла присваем в переменную curr_generation
+        # объекту данного класса
+        return s  # возвращаем этот объект
 
     def save(self, filename: pathlib.Path) -> None:
         """
         Сохранить текущее состояние клеток в указанный файл.
         """
-        pass
+        f = open(filename, "w")
+        for i in self.curr_generation:  # берем каждую строчку их нынешнего поколения и записываем ее в файл
+            f.write("".join(map(str, i)) + "\n")
+        f.close()
+
+
+# if __name__ == '__main__':
+#     life = GameOfLife((30, 20), max_generations=20)
+#     print(life.curr_generation)
+#     life.step()
+#     print(life.prev_generation)
+#     print(life.curr_generation)
