@@ -6,7 +6,7 @@ from random import randint
 T = tp.TypeVar("T")
 
 
-# Эта функция принимает один аргумент path, который может быть строкой или объектом 
+# Эта функция принимает один аргумент path, который может быть строкой или объектом
 # pathlib.Path и представляет собой путь к файлу, содержащему Sudoku.
 def read_sudoku(path: tp.Union[str, pathlib.Path]) -> tp.List[tp.List[str]]:
     """Прочитать Судоку из указанного файла"""
