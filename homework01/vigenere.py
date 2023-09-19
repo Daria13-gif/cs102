@@ -1,3 +1,4 @@
+# функция выполняет шифрование текста с использованием шифра Виженера
 def encrypt_vigenere(plaintext: str, keyword: str) -> str:
     """
     Encrypts plaintext using a Vigenere cipher.
@@ -8,6 +9,7 @@ def encrypt_vigenere(plaintext: str, keyword: str) -> str:
     >>> encrypt_vigenere("ATTACKATDAWN", "LEMON")
     'LXFOPVEFRNHR'
     """
+    # Создается пустая строка ciphertext, которая будет содержать зашифрованный текст
     ciphertext = ""
     for i in range(len(plaintext)):  # обход каждой буквы в plaintext
         if "a" <= plaintext[i] <= "z":  # проверка наличия буквы в алфавите
