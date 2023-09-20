@@ -9,3 +9,7 @@ coverage.xml
 
 # Mypy cache
 .mypy_cache/
+
+.xml
+.iml
+.DS_Store
