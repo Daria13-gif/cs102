@@ -40,7 +40,7 @@ def display(grid: tp.List[tp.List[str]]) -> None:
     # Этот цикл проходит через каждую строку в сетке Sudoku (всего 9 строк)
     for row in range(9):
         # происходит формирование строки для вывода текущей строки сетки.
-        print("".join(grid[row][col].center(width) + ("|" if str(col) in "25" else "") for col in range(9))
+        print("".join(grid[row][col].center(width) + ("|" if str(col) in "25" else "") for col in range(9)))
               # выражение проверяет, является ли row (номер текущей строки) равным 2 или 5.
         # Если это так, то это означает, что нужно добавить строку-разделитель line между блоками Sudoku.
         if str(row) in "25":
