@@ -1,6 +1,5 @@
 import unittest
 from random import seed
-
 import maze
 
 
